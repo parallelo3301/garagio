@@ -9,7 +9,7 @@
     "dev": "deno run -A --watch=static/,routes/,islands/,components/,db/ dev.ts",
     "start": "deno run -A main.ts",
     "check": "deno check main.ts dev.ts",
-    "build": "deno compile --allow-read --allow-write --allow-net --allow-ffi --output workshop-inventory main.ts",
+    "build": "pnpm run css && deno compile --allow-read --allow-write --allow-net --allow-ffi --allow-env --include deno.json --include db/migrations --include static --output workshop-inventory main.ts",
     "migrate:create": "deno run --allow-read --allow-write scripts/create_migration.ts"
   },
   "compilerOptions": {

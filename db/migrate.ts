@@ -8,6 +8,7 @@ function migrationVersion(fileName: string) {
 }
 
 export async function migrate() {
+  await Deno.mkdir(`${Deno.cwd()}/uploads`, { recursive: true });
   const migrations: Array<{ version: number; file: URL }> = [];
   for await (const entry of Deno.readDir(migrationsDirectory)) {
     const version = entry.isFile ? migrationVersion(entry.name) : undefined;

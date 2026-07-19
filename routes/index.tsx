@@ -1,3 +1,6 @@
+import InventoryApp from '../islands/InventoryApp.tsx';
+import { listItems } from '../db/repository.ts';
+
 export default function Home() {
-  return <main>Garagio is starting up.</main>;
+  return <InventoryApp initialItems={listItems()} />;
 }

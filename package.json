@@ -8,7 +8,11 @@
     "start": "deno task start",
     "check": "deno task check",
     "build": "deno task build",
+    "css": "tailwindcss -i styles/tailwind.css -o static/styles.css --minify",
     "migrate:create": "deno task migrate:create"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
   },
   "keywords": [],
   "author": "",
