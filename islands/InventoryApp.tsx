@@ -35,7 +35,8 @@ async function uploadImages(files: FileList | File[]) {
   return (await response.json() as { paths: string[] }).paths;
 }
 
-export default function InventoryApp({ initialItems }: { initialItems: InventoryItem[] }) {
+export default function InventoryApp({ authenticated, initialItems }: { authenticated: boolean; initialItems: InventoryItem[] }) {
+  if (!authenticated) return <AccessGate />;
   const [section, setSection] = useState<Section>('inventory');
   const [items, setItems] = useState(initialItems);
   const [manufacturers, setManufacturers] = useState<Manufacturer[]>([]);
@@ -82,14 +83,16 @@ export default function InventoryApp({ initialItems }: { initialItems: Inventory
   };
   return (
     <div class='min-h-screen bg-stone-100 text-stone-900'>
-      <header class='border-b border-stone-200 bg-white px-4 py-4 lg:hidden'>
+      <header class='flex items-center justify-between border-b border-stone-200 bg-white px-4 py-4 lg:hidden'>
         <h1 class='font-display text-2xl font-bold'>Garagio</h1>
+        <LogoutButton />
       </header>
       <div class='mx-auto flex min-h-screen max-w-7xl'>
         <aside class='hidden w-80 shrink-0 border-r border-stone-200 bg-white p-6 lg:block'>
           <h1 class='font-display text-3xl font-bold'>Garagio</h1>
           <p class='mt-1 text-sm text-stone-500'>Workshop inventory</p>
           <Navigation section={section} setSection={setSection} />
+          <div class='mt-10 border-t border-stone-200 pt-4'><LogoutButton /></div>
         </aside>
         <main class='min-w-0 flex-1 px-4 pb-24 pt-5 sm:px-7 lg:pb-8 lg:pt-8'>
           {error && (
@@ -146,6 +149,36 @@ export default function InventoryApp({ initialItems }: { initialItems: Inventory
       )}
     </div>
   );
+}
+
+function AccessGate() {
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const login = async (event: Event) => {
+    event.preventDefault();
+    setError('');
+    setSubmitting(true);
+    try {
+      await request('/api/auth/login', { method: 'POST', body: JSON.stringify({ password }) });
+      localStorage.setItem('garagio_authenticated', 'true');
+      location.reload();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Unable to sign in');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+  return <main class='grid min-h-screen place-items-center bg-stone-100 p-5'><form onSubmit={(event) => void login(event)} class='w-full max-w-sm border border-stone-200 bg-white p-6 shadow-sm'><h1 class='font-display text-3xl font-bold'>Garagio</h1><p class='mt-1 text-sm text-stone-500'>Enter the workshop access password.</p>{error && <p class='mt-4 border border-red-200 bg-red-50 p-3 text-sm text-red-700'>{error}</p>}<label class='mt-6 grid gap-2 text-sm font-bold text-stone-700'><span>Password</span><input type='password' value={password} onInput={(event) => setPassword(event.currentTarget.value)} class='min-h-12 border border-stone-300 px-3 outline-none focus:border-emerald-700' autoFocus /></label><button disabled={submitting || !password} class='mt-4 min-h-12 w-full bg-emerald-700 px-4 text-sm font-bold text-white disabled:opacity-50'>{submitting ? 'Checking...' : 'Unlock Garagio'}</button></form></main>;
+}
+
+function LogoutButton() {
+  const logout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    localStorage.removeItem('garagio_authenticated');
+    location.reload();
+  };
+  return <button type='button' onClick={() => void logout()} class='min-h-10 px-3 text-sm font-bold text-stone-600 hover:bg-stone-100'>Log out</button>;
 }
 
 function Navigation(
@@ -630,22 +663,24 @@ function WikiWorkspace(
               class='min-h-10 w-full border border-stone-300 px-3 text-sm outline-none focus:border-emerald-700'
             />
           </div>
-          {filteredPages.length
-            ? filteredPages.map((page) => (
-              <button
-                type='button'
-                onClick={() => {
-                  select(page.id);
-                  setEditing(false);
-                }}
-                class={`block min-h-12 w-full border-b border-stone-100 px-4 text-left text-sm font-semibold ${
-                  selected?.id === page.id ? 'bg-emerald-50 text-emerald-900' : 'hover:bg-stone-50'
-                }`}
-              >
-                {page.title}
-              </button>
-            ))
-            : <p class='p-4 text-sm text-stone-500'>{pages.length ? 'No matching pages.' : 'No pages yet.'}</p>}
+          <div class='max-h-60 overflow-y-auto'>
+            {filteredPages.length
+              ? filteredPages.map((page) => (
+                <button
+                  type='button'
+                  onClick={() => {
+                    select(page.id);
+                    setEditing(false);
+                  }}
+                  class={`block min-h-12 w-full border-b border-stone-100 px-4 text-left text-sm font-semibold ${
+                    selected?.id === page.id ? 'bg-emerald-50 text-emerald-900' : 'hover:bg-stone-50'
+                  }`}
+                >
+                  {page.title}
+                </button>
+              ))
+              : <p class='p-4 text-sm text-stone-500'>{pages.length ? 'No matching pages.' : 'No pages yet.'}</p>}
+          </div>
         </aside>
         <div>
           {editing
