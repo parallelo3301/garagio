@@ -10,8 +10,9 @@ FROM denoland/deno:2.9.3 AS compile
 
 WORKDIR /build
 COPY --from=css /build .
-RUN deno compile --allow-read --allow-write --allow-net --allow-ffi --allow-env --allow-run \
-  --include deno.json --include db/migrations --include static \
+RUN deno run -A dev.ts build \
+  && deno compile --allow-read --allow-write --allow-net --allow-ffi --allow-env --allow-run \
+  --include deno.json --include db/migrations --include static --include _fresh \
   --output /out/garagio main.ts
 
 FROM debian:trixie-slim
