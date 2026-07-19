@@ -140,3 +140,11 @@ routes/          Fresh pages and API routes
 static/          Compiled CSS and static assets
 uploads/         Runtime photo storage (created automatically)
 ```
+
+# Demo
+
+https://github.com/user-attachments/assets/9d398e52-aa28-4017-bf23-60bc3b5d39e8
+
+
+
+
