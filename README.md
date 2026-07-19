@@ -74,6 +74,24 @@ Edit Tailwind utility classes in the Preact components or add global CSS to `sty
 
 `pnpm build:linux` produces `workshop-inventory-linux`, targeting `x86_64-unknown-linux-gnu`. It is suitable for an x86_64 Ubuntu 22.04 deployment host.
 
+## Docker Deployment
+
+Docker avoids host glibc compatibility problems with the SQLite native bridge. It runs with the system SQLite library from a controlled Debian image.
+
+Create `.env` from `.env.example`, set a secure `ACCESS_PASSWORD`, then build and start the service:
+
+```bash
+docker compose up --build -d
+```
+
+Open `http://localhost:8000`. The `data/` directory holds both `db.sqlite` and `uploads/`; back it up as one unit. To upgrade, pull the new source and run:
+
+```bash
+docker compose up --build -d
+```
+
+Stop the service with `docker compose down`. This preserves `data/`; do not add `-v` because it is unnecessary and can remove Docker-managed volumes in other configurations.
+
 ## Deploying to Ubuntu
 
 Build the Linux executable on your development machine:

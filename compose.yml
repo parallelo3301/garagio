@@ -1,0 +1,12 @@
+services:
+  garagio:
+    build: .
+    ports:
+      - '8000:8000'
+    env_file:
+      - .env
+    environment:
+      DENO_SQLITE_PATH: /usr/local/lib/libsqlite3.so
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
