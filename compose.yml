@@ -2,7 +2,7 @@ services:
   garagio:
     image: ghcr.io/parallelo3301/garagio:latest
     ports:
-      - '8000:8000'
+      - '${PORT:-8000}:${PORT:-8000}'
     env_file:
       - .env
     environment:
