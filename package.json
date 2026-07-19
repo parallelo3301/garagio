@@ -1,0 +1,17 @@
+{
+  "name": "garagio",
+  "version": "1.0.0",
+  "description": "Standalone workshop inventory manager",
+  "private": true,
+  "scripts": {
+    "dev": "deno task dev",
+    "start": "deno task start",
+    "check": "deno task check",
+    "build": "deno task build",
+    "migrate:create": "deno task migrate:create"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.29.2"
+}
