@@ -4,12 +4,13 @@
   "description": "Standalone workshop inventory manager",
   "private": true,
   "scripts": {
-    "dev": "deno task dev",
+    "dev": "pnpm run css:watch & deno task dev",
     "start": "deno task start",
     "check": "deno task check",
     "build": "deno task build",
     "build:linux": "deno task build:linux",
     "css": "tailwindcss -i styles/tailwind.css -o static/styles.css --minify",
+    "css:watch": "tailwindcss -i styles/tailwind.css -o static/styles.css --watch",
     "migrate:create": "deno task migrate:create"
   },
   "devDependencies": {

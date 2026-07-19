@@ -63,12 +63,14 @@ Do not enable `TRUST_PROXY=true` when the service is directly reachable from unt
 ## Development Commands
 
 ```bash
-pnpm dev                 # Start Fresh with file watching
+pnpm dev                 # Start Fresh and automatically rebuild CSS on changes
 pnpm check               # Type-check the app
 pnpm build               # Build a native executable for the current platform
 pnpm build:linux         # Cross-compile an x86_64 GNU/Linux executable
 pnpm migrate:create add_feature_name
 ```
+
+Edit Tailwind utility classes in the Preact components or add global CSS to `styles/tailwind.css`. `static/styles.css` is the generated, minified stylesheet served by the app and should remain committed so the source checkout works before a CSS build. `pnpm dev` rebuilds it automatically; `pnpm build` also regenerates it before compiling the executable.
 
 `pnpm build:linux` produces `workshop-inventory-linux`, targeting `x86_64-unknown-linux-gnu`. It is suitable for an x86_64 Ubuntu 22.04 deployment host.
 

@@ -243,7 +243,7 @@ function InventoryView(
           >
             <div class='h-14 w-14 overflow-hidden bg-stone-100'>
               {item.photos[0]
-                ? <img src={item.photos[0]} alt='' class='h-full w-full object-cover' />
+                ? <img src={item.photos[0]} alt='' class='h-full w-full object-contain' />
                 : (
                   <span class='flex h-full items-center justify-center text-xs text-stone-400'>
                     No photo
@@ -858,6 +858,14 @@ function MarkdownPreview({ content }: { content: string }) {
             >
               {heading[2]}
             </h4>
+          );
+        }
+        const listItems = block.trim().split('\n').map((line) => /^\s*[-*+]\s+(.+)$/.exec(line));
+        if (listItems.every(Boolean)) {
+          return (
+            <ul class='my-3 list-disc space-y-1 pl-6 leading-7'>
+              {listItems.map((item) => <li>{inlineMarkdown(item![1])}</li>)}
+            </ul>
           );
         }
         return <p class='my-3 whitespace-pre-wrap leading-7'>{inlineMarkdown(block)}</p>;
