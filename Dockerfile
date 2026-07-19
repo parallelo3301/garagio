@@ -10,7 +10,7 @@ FROM denoland/deno:2.9.3 AS compile
 
 WORKDIR /build
 COPY --from=css /build .
-RUN deno compile --allow-read --allow-write --allow-net --allow-ffi --allow-env \
+RUN deno compile --allow-read --allow-write --allow-net --allow-ffi --allow-env --allow-run \
   --include deno.json --include db/migrations --include static \
   --output /out/garagio main.ts
 

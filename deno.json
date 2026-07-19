@@ -9,8 +9,8 @@
     "dev": "deno run -A --env-file=.env --watch=static/,routes/,islands/,components/,db/ dev.ts",
     "start": "deno run -A --env-file=.env main.ts",
     "check": "deno check main.ts dev.ts",
-    "build": "pnpm run css && deno compile --allow-read --allow-write --allow-net --allow-ffi --allow-env --include deno.json --include db/migrations --include static --output workshop-inventory main.ts",
-    "build:linux": "pnpm run css && deno compile --target x86_64-unknown-linux-gnu --allow-read --allow-write --allow-net --allow-ffi --allow-env --include deno.json --include db/migrations --include static --output workshop-inventory-linux main.ts",
+    "build": "pnpm run css && deno compile --allow-read --allow-write --allow-net --allow-ffi --allow-env --allow-run --include deno.json --include db/migrations --include static --output workshop-inventory main.ts",
+    "build:linux": "pnpm run css && deno compile --target x86_64-unknown-linux-gnu --allow-read --allow-write --allow-net --allow-ffi --allow-env --allow-run --include deno.json --include db/migrations --include static --output workshop-inventory-linux main.ts",
     "migrate:create": "deno run --allow-read --allow-write scripts/create_migration.ts"
   },
   "compilerOptions": {
