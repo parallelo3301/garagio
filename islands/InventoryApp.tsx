@@ -88,13 +88,13 @@ export default function InventoryApp({ authenticated, initialItems }: { authenti
         <LogoutButton />
       </header>
       <div class='mx-auto flex min-h-screen max-w-7xl'>
-        <aside class='hidden w-80 shrink-0 border-r border-stone-200 bg-white p-6 lg:block'>
+        <aside class='hidden w-50 shrink-0 border-r border-stone-200 bg-white p-6 lg:block'>
           <h1 class='font-display text-3xl font-bold'>Garagio</h1>
           <p class='mt-1 text-sm text-stone-500'>Workshop inventory</p>
           <Navigation section={section} setSection={setSection} />
           <div class='mt-10 border-t border-stone-200 pt-4'><LogoutButton /></div>
         </aside>
-        <main class='min-w-0 flex-1 px-4 pb-24 pt-5 sm:px-7 lg:pb-8 lg:pt-8'>
+        <main class='min-w-0 flex-1 px-2 pb-24 pt-5 sm:px-7 lg:pb-8 lg:pt-8'>
           {error && (
             <p class='mb-4 border border-red-200 bg-red-50 p-3 text-sm text-red-700'>{error}</p>
           )}
@@ -630,9 +630,9 @@ function WikiWorkspace(
     try {
       const paths = await uploadImages(files);
       setContent((value) =>
-        `${value}${value && !value.endsWith('\n') ? '\n' : ''}${
-          paths.map((path) => `![](${path})`).join('\n')
-        }\n`
+        `${value.trimEnd()}${value.trim() ? '\n\n' : ''}${
+          paths.map((path) => `![](${path})`).join('\n\n')
+        }\n\n`
       );
     } finally {
       setUploading(false);
@@ -837,9 +837,13 @@ function WikiEditor({
   );
 }
 function MarkdownPreview({ content }: { content: string }) {
+  const blocks = content
+    .replace(/^(!\[[^\]]*\]\([^ )]+\))\s*$/gm, '\n\n$1\n\n')
+    .split(/\n{2,}/)
+    .filter(Boolean);
   return (
     <div class='prose mt-5 max-w-none text-stone-700'>
-      {content.split(/\n{2,}/).filter(Boolean).map((block) => {
+      {blocks.map((block) => {
         const image = /^!\[([^\]]*)\]\(([^ )]+)\)$/.exec(block.trim());
         if (image) {
           return (
@@ -862,16 +866,18 @@ function MarkdownPreview({ content }: { content: string }) {
   );
 }
 function inlineMarkdown(value: string): ComponentChildren {
-  const segments = value.split(/(\[[^\]]+\]\([^ )]+\))/g);
+  const segments = value.split(/(\[[^\]]+\]\([^ )]+\)|(?:https?:\/\/|www\.)[^\s<>()]+)/g);
   return segments.map((segment) => {
     const match = /^\[([^\]]+)\]\(([^ )]+)\)$/.exec(segment);
-    return match
-      ? (
-        <a href={match[2]} target='_blank' rel='noreferrer' class='text-emerald-800 underline'>
-          {match[1]}
-        </a>
-      )
-      : segment;
+    if (match) {
+      return <a href={match[2]} target='_blank' rel='noreferrer' class='text-emerald-800 underline'>{match[1]}</a>;
+    }
+    if (/^(https?:\/\/|www\.)/.test(segment)) {
+      const url = segment.replace(/[.,!?;:]+$/, '');
+      const trailingPunctuation = segment.slice(url.length);
+      return <>{url && <a href={url.startsWith('www.') ? `https://${url}` : url} target='_blank' rel='noreferrer' class='text-emerald-800 underline'>{url}</a>}{trailingPunctuation}</>;
+    }
+    return segment;
   });
 }
 function Field({ label, children }: { label: string; children: ComponentChildren }) {

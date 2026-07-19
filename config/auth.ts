@@ -1,6 +1,7 @@
-const sessions = new Set<string>();
-const cookieName = 'garagio_session';
 import { openDatabase } from '../db/database.ts';
+
+const cookieName = 'garagio_session';
+const sessionLifetimeSeconds = 60 * 60 * 24 * 30;
 
 function configuredPassword() {
   const environmentValue = Deno.env.get('ACCESS_PASSWORD');
@@ -21,9 +22,26 @@ function sessionFrom(request: Request) {
   )?.slice(cookieName.length + 1);
 }
 
+export function clientIp(request: Request, directIpAddress: string) {
+  if (Deno.env.get('TRUST_PROXY') !== 'true') return directIpAddress;
+  const forwarded = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+  return forwarded || request.headers.get('x-real-ip')?.trim() || directIpAddress;
+}
+
 export function isAuthenticated(request: Request) {
   const session = sessionFrom(request);
-  return Boolean(session && sessions.has(session));
+  if (!session) return false;
+  const database = openDatabase();
+  try {
+    const storedSession = database.prepare<{ expires_at: string }>(
+      'SELECT expires_at FROM auth_sessions WHERE session_id = ?',
+    ).get(session);
+    if (storedSession && new Date(storedSession.expires_at) > new Date()) return true;
+    database.prepare('DELETE FROM auth_sessions WHERE session_id = ?').run(session);
+    return false;
+  } finally {
+    database.close();
+  }
 }
 
 export function passwordMatches(password: string) {
@@ -80,14 +98,29 @@ export function clearFailedLogins(ipAddress: string) {
   }
 }
 
-export function createSession() {
+export function createSession(ipAddress: string) {
   const session = crypto.randomUUID();
-  sessions.add(session);
-  return `${cookieName}=${session}; HttpOnly; SameSite=Strict; Path=/; Max-Age=2592000`;
+  const expiresAt = new Date(Date.now() + sessionLifetimeSeconds * 1000).toISOString();
+  const database = openDatabase();
+  try {
+    database.prepare(
+      'INSERT INTO auth_sessions (session_id, ip_address, expires_at) VALUES (?, ?, ?)',
+    ).run(session, ipAddress, expiresAt);
+  } finally {
+    database.close();
+  }
+  return `${cookieName}=${session}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${sessionLifetimeSeconds}`;
 }
 
 export function clearSession(request: Request) {
   const session = sessionFrom(request);
-  if (session) sessions.delete(session);
+  if (session) {
+    const database = openDatabase();
+    try {
+      database.prepare('DELETE FROM auth_sessions WHERE session_id = ?').run(session);
+    } finally {
+      database.close();
+    }
+  }
   return `${cookieName}=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0`;
 }

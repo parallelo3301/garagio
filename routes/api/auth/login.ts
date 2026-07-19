@@ -1,5 +1,6 @@
 import type { HandlerContext } from '$fresh/server.ts';
 import {
+  clientIp,
   clearFailedLogins,
   createSession,
   isIpBanned,
@@ -9,7 +10,7 @@ import {
 
 export const handler = {
   async POST(request: Request, context: HandlerContext) {
-    const ipAddress = context.remoteAddr.hostname;
+    const ipAddress = clientIp(request, context.remoteAddr.hostname);
     if (isIpBanned(ipAddress)) {
       return Response.json({ error: 'Too many failed attempts. Try again in one month.' }, {
         status: 429,
@@ -28,6 +29,8 @@ export const handler = {
       );
     }
     clearFailedLogins(ipAddress);
-    return Response.json({ authenticated: true }, { headers: { 'set-cookie': createSession() } });
+    return Response.json({ authenticated: true }, {
+      headers: { 'set-cookie': createSession(ipAddress) },
+    });
   },
 };
