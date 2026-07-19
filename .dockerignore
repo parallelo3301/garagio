@@ -3,5 +3,9 @@
 node_modules/
 data/
 uploads/
+!routes/api/uploads/
+!routes/api/uploads/**
+!routes/uploads/
+!routes/uploads/**
 db.sqlite
 workshop-inventory*
