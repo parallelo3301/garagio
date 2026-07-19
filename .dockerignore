@@ -2,10 +2,6 @@
 .env
 node_modules/
 data/
-uploads/
-!routes/api/uploads/
-!routes/api/uploads/**
-!routes/uploads/
-!routes/uploads/**
+uploads/*
 db.sqlite
 workshop-inventory*
