@@ -1,5 +1,5 @@
 node_modules/
 uploads/
-workshop-inventory
+workshop-inventory*
 db.sqlite
 .env

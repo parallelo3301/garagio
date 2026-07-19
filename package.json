@@ -8,6 +8,7 @@
     "start": "deno task start",
     "check": "deno task check",
     "build": "deno task build",
+    "build:linux": "deno task build:linux",
     "css": "tailwindcss -i styles/tailwind.css -o static/styles.css --minify",
     "migrate:create": "deno task migrate:create"
   },
