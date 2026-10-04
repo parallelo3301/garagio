@@ -72,6 +72,17 @@ pnpm migrate:create add_feature_name
 
 Edit Tailwind utility classes in the Preact components or add global CSS to `styles/tailwind.css`. `static/styles.css` is the generated, minified stylesheet served by the app and should remain committed so the source checkout works before a CSS build. `pnpm dev` rebuilds it automatically; `pnpm build` also regenerates it before compiling the executable.
 
+### UI components
+
+`components/ui/` contains local, shadcn-inspired **Preact** primitives styled by the existing Tailwind 3 pipeline; no React runtime or shadcn CLI is needed. The inventory search and item editor use them.
+
+- `Button` supports `default`, `outline`, `ghost`, and `destructive` variants. It defaults to `type='button'`; use `type='submit'` in forms.
+- `Input` and `Label` accept native Preact attributes and events. Associate labels using `for`/`id` or wrap the input in a label.
+- `Button`, `Input`, and `Label` accept `class` or `className` for additional utilities.
+- `Dialog` takes `open`, `onClose`, and `labelledBy` (the ID of a visible heading), with optional `describedBy` and `variant='sheet'`. The default layout is centered; the sheet is bottom-aligned on phones and right-aligned on desktop. Use it inside an island and update the controlling state in `onClose`.
+
+Dialogs use the browser's native `showModal()` for focus trapping and background inertness, restore focus when closed, lock background scrolling, and dismiss via Escape or a backdrop click. Include a visible close button. No additional test framework is configured; validate UI changes with `pnpm check`, `pnpm run css`, and keyboard/mobile browser checks.
+
 `pnpm build:linux` produces `workshop-inventory-linux`, targeting `x86_64-unknown-linux-gnu`. It is suitable for an x86_64 Ubuntu 22.04 deployment host.
 
 ## Docker Deployment
@@ -153,6 +164,7 @@ Keep migrations small and test them against a copy of a real database before dep
 ```text
 config/          Environment and authentication helpers
 db/              SQLite connection, migration runner, and SQL migrations
+components/ui/   Shared Preact UI primitives
 islands/         Interactive Preact UI
 routes/          Fresh pages and API routes
 static/          Compiled CSS and static assets
@@ -162,7 +174,6 @@ uploads/         Runtime photo storage (created automatically)
 # Demo
 
 https://github.com/user-attachments/assets/9d398e52-aa28-4017-bf23-60bc3b5d39e8
-
 
 
 

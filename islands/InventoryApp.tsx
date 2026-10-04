@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
 import type { InventoryItem, ItemInput, Link, Manufacturer, WikiPage } from '../db/repository.ts';
+import { Button } from '../components/ui/button.tsx';
+import { Dialog } from '../components/ui/dialog.tsx';
+import { Input } from '../components/ui/input.tsx';
+import { Label } from '../components/ui/label.tsx';
 
 type Section = 'inventory' | 'wiki' | 'settings';
 const statuses = ['in_stock', 'borrowed', 'damaged', 'maintenance', 'retired'];
@@ -220,19 +224,21 @@ function InventoryView(
           <h2 class='font-display text-3xl font-bold'>Inventory</h2>
           <p class='mt-1 text-sm text-stone-500'>{items.length} tools and supplies</p>
         </div>
-        <button
-          type='button'
+        <Button
           onClick={create}
-          class='min-h-11 bg-emerald-700 px-4 text-sm font-bold text-white'
+          class='shrink-0'
         >
           Add item
-        </button>
+        </Button>
       </div>
-      <input
+      <Label for='inventory-search' class='sr-only'>Search inventory</Label>
+      <Input
+        id='inventory-search'
+        type='search'
         value={query}
         onInput={(event) => setQuery(event.currentTarget.value)}
         placeholder='Search name, manufacturer, status, tags, location...'
-        class='mt-6 min-h-12 w-full border border-stone-300 bg-white px-4 text-base outline-none focus:border-emerald-700'
+        class='mt-6'
       />
       <div class='mt-4 divide-y divide-stone-200 border-y border-stone-200 bg-white'>
         {items.map((item) => (
@@ -308,24 +314,20 @@ function ItemSheet({
     }
   };
   return (
-    <div class='fixed inset-0 z-30 bg-stone-950/35' onClick={close}>
-      <section
-        class='absolute inset-x-0 bottom-0 max-h-[92vh] overflow-auto bg-white p-5 shadow-2xl lg:inset-y-0 lg:left-auto lg:w-[42rem]'
-        onClick={(event) => event.stopPropagation()}
-      >
+    <Dialog open onClose={close} labelledBy='item-sheet-title' variant='sheet'>
+      <section>
         <div class='flex items-center justify-between'>
-          <h2 class='font-display text-2xl font-bold'>{item.id ? 'Edit item' : 'New item'}</h2>
-          <button
-            type='button'
+          <h2 id='item-sheet-title' class='font-display text-2xl font-bold'>{item.id ? 'Edit item' : 'New item'}</h2>
+          <Button
+            variant='ghost'
             onClick={close}
-            class='min-h-10 px-3 text-sm font-bold text-stone-600'
           >
             Close
-          </button>
+          </Button>
         </div>
         <div class='mt-6 grid gap-4'>
           <Field label='Name'>
-            <input
+            <Input
               autoFocus
               value={form.name}
               onInput={(event) => change('name', event.currentTarget.value)}
@@ -339,7 +341,7 @@ function ItemSheet({
           </Field>
           <div class='grid grid-cols-2 gap-4'>
             <Field label='Quantity'>
-              <input
+              <Input
                 type='number'
                 min='0'
                 value={form.quantity}
@@ -347,7 +349,7 @@ function ItemSheet({
               />
             </Field>
             <Field label='Location'>
-              <input
+              <Input
                 value={form.location}
                 onInput={(event) => change('location', event.currentTarget.value)}
               />
@@ -382,13 +384,13 @@ function ItemSheet({
           {form.status === 'borrowed' && (
             <div class='grid grid-cols-2 gap-4'>
               <Field label='Borrowed to'>
-                <input
+                <Input
                   value={form.borrowedTo ?? ''}
                   onInput={(event) => change('borrowedTo', event.currentTarget.value || null)}
                 />
               </Field>
               <Field label='Borrowed date'>
-                <input
+                <Input
                   type='date'
                   value={form.borrowedAt ?? ''}
                   onInput={(event) => change('borrowedAt', event.currentTarget.value || null)}
@@ -397,10 +399,10 @@ function ItemSheet({
             </div>
           )}
           <Field label='Tags (comma separated)'>
-            <input value={tagDraft} onInput={(event) => setTagDraft(event.currentTarget.value)} />
+            <Input value={tagDraft} onInput={(event) => setTagDraft(event.currentTarget.value)} />
           </Field>
           <Field label='Photos'>
-            <input
+            <Input
               type='file'
               accept='image/*'
               multiple
@@ -436,17 +438,15 @@ function ItemSheet({
         <div class='mt-7 flex justify-between gap-3'>
           {item.id
             ? (
-              <button
-                type='button'
+              <Button
+                variant='destructive'
                 onClick={() => void remove()}
-                class='min-h-11 px-3 text-sm font-bold text-red-700'
               >
                 Delete
-              </button>
+              </Button>
             )
             : <span />}
-          <button
-            type='button'
+          <Button
             disabled={saving || uploading || !form.name.trim()}
             onClick={() => {
               setSaving(true);
@@ -455,13 +455,12 @@ function ItemSheet({
                 tags: tagDraft.split(',').map((tag) => tag.trim()).filter(Boolean),
               }, item.id || undefined).finally(() => setSaving(false));
             }}
-            class='min-h-11 bg-emerald-700 px-5 text-sm font-bold text-white disabled:opacity-50'
           >
             {saving ? 'Saving...' : 'Save item'}
-          </button>
+          </Button>
         </div>
       </section>
-    </div>
+    </Dialog>
   );
 }
 
@@ -890,12 +889,12 @@ function inlineMarkdown(value: string): ComponentChildren {
 }
 function Field({ label, children }: { label: string; children: ComponentChildren }) {
   return (
-    <label class='grid gap-1.5 text-sm font-semibold text-stone-700'>
+    <Label class='grid gap-1.5'>
       <span>{label}</span>
-      <span class='[&>input:not([type=file])]:min-h-11 [&>input:not([type=file])]:w-full [&>input:not([type=file])]:border [&>input:not([type=file])]:border-stone-300 [&>input:not([type=file])]:px-3 [&>select]:min-h-11 [&>select]:w-full [&>select]:border [&>select]:border-stone-300 [&>select]:px-3 [&>textarea]:min-h-24 [&>textarea]:w-full [&>textarea]:border [&>textarea]:border-stone-300 [&>textarea]:p-3'>
+      <span class='[&>select]:min-h-11 [&>select]:w-full [&>select]:border [&>select]:border-stone-300 [&>select]:px-3 [&>textarea]:min-h-24 [&>textarea]:w-full [&>textarea]:border [&>textarea]:border-stone-300 [&>textarea]:p-3'>
         {children}
       </span>
-    </label>
+    </Label>
   );
 }
 function SettingsView(
