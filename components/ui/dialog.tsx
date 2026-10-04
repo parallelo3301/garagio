@@ -25,6 +25,7 @@ export function Dialog({
     if (!open || !dialog) return;
     // showModal supplies focus trapping and makes the rest of the page inert.
     dialog.showModal();
+    dialog.querySelector<HTMLElement>('[autofocus]')?.focus();
     const overflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
