@@ -64,7 +64,7 @@ Styles live in `app/assets/tailwind/application.css` (Tailwind 4 + vendored dais
 
 ## Docker deployment
 
-GitHub Actions (`.github/workflows/docker.yml`) runs lint, security scan and tests. On every push to `master` (and on `v*` tags) it publishes a multi-arch image (`linux/amd64`, `linux/arm64`) to `ghcr.io/parallelo3301/garagio`.
+GitHub Actions (`.github/workflows/docker.yml`) runs lint, security scan and tests. On every push to `master` (and on `v*` tags) it publishes a `linux/amd64` image to `ghcr.io/parallelo3301/garagio`.
 
 ```bash
 cp .env.example .env       # set ACCESS_PASSWORD
@@ -91,8 +91,6 @@ For reverse-proxy deployments, point the proxy to port 8000, have it set `X-Forw
 The Rails version uses the same data layout (`db.sqlite` + `uploads/`) and the same `compose.yml` volume (`./data:/data`). On first start, `db:prepare` detects a database created by the Deno version and migrates it in place. Items, tags, manufacturers, wiki pages, links, sessions and login bans are kept, and existing sessions stay valid. Back up `data/` before upgrading.
 
 The JSON API keeps the original paths and payloads (`/api/auth/login`, `/api/items`, `/api/manufacturers`, `/api/wiki`, `/api/uploads`).
-
-The previous Deno implementation is kept in `origin/` for reference.
 
 ## Data and backups
 
@@ -122,7 +120,6 @@ app/views/            ERB views (Turbo Frames for the item sheet, search and wik
 app/javascript/       Stimulus controllers and small request helpers
 app/assets/tailwind/  Tailwind + daisyUI theme
 db/migrate/           Schema (also adopts databases from the Deno version)
-origin/               Previous Deno Fresh implementation (reference only)
 ```
 
 # Demo
