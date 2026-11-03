@@ -6,11 +6,15 @@ Rails.application.routes.draw do
   delete "logout" => "sessions#destroy"
 
   root "items#index"
+  post "items/identify" => "item_identifications#create", as: :identify_items
   resources :items, only: %i[index show new create edit update destroy]
   resources :wiki_pages, path: "wiki", only: %i[index show new create edit update destroy] do
     post :preview, on: :collection
   end
   get "settings" => "manufacturers#index", as: :settings
+  resource :ai_settings, path: "settings/ai", only: %i[update] do
+    get :models
+  end
   resources :manufacturers, only: %i[create destroy]
 
   post "uploads" => "uploads#create"

@@ -1,4 +1,6 @@
 class ItemsController < ApplicationController
+  NEW_MANUFACTURER = "__new__"
+
   before_action :set_item, only: %i[show edit update destroy]
   before_action :load_form_options, only: %i[new create edit update]
 
@@ -50,7 +52,16 @@ class ItemsController < ApplicationController
     @item = Item.with_details.find(params[:id])
   end
 
+  # Manufacturers suggested by AI recognition are created when the item is saved.
+  def find_or_create_manufacturer(name)
+    return if name.blank?
+
+    Manufacturer.where("LOWER(name) = ?", name.downcase).first || Manufacturer.create(name: name.truncate(100))
+  end
+
   def load_form_options
+    @ai_config = AiConfig.current
+    @ai_configured = @ai_config.configured?
     @manufacturers = Manufacturer.ordered
     @wiki_pages = WikiPage.ordered.select(:id, :title)
     @tag_suggestions = Tag.order(Arel.sql("name COLLATE NOCASE")).pluck(:name)
@@ -80,7 +91,9 @@ class ItemsController < ApplicationController
 
   def item_params
     permitted = params.expect(item: [ :name, :kind, :description, :quantity, :amount, :location, :manufacturer_id, :status,
-      :borrowed_to, :borrowed_at, :tag_list, photos: [], wiki_page_ids: [], links: [ [ :label, :url ] ] ])
+      :borrowed_to, :borrowed_at, :tag_list, :manufacturer_name, photos: [], wiki_page_ids: [], links: [ [ :label, :url ] ] ])
+    new_manufacturer = permitted.delete(:manufacturer_name).to_s.strip
+    permitted[:manufacturer_id] = find_or_create_manufacturer(new_manufacturer)&.id if permitted[:manufacturer_id] == NEW_MANUFACTURER
     permitted[:photos] ||= []
     permitted[:links] = Array(permitted[:links]).map(&:to_h)
     permitted[:wiki_page_ids] = Array(permitted[:wiki_page_ids]).compact_blank

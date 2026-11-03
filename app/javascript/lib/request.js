@@ -34,3 +34,23 @@ export async function postForm(url, params) {
   if (!response.ok) throw new Error("Request failed")
   return response.text()
 }
+
+export async function postJSON(url, params) {
+  const response = await fetch(url, {
+    method: "POST",
+    body: JSON.stringify(params),
+    headers: { "X-CSRF-Token": csrfToken(), "Content-Type": "application/json", Accept: "application/json" },
+    credentials: "same-origin"
+  })
+  const body = await response.json().catch(() => ({}))
+  if (response.status === 504) throw new Error("The server gave up waiting for the AI service. Try again, or disable web search.")
+  if (!response.ok) throw new Error(body.error ?? `Request failed (${response.status})`)
+  return body
+}
+
+export async function getJSON(url) {
+  const response = await fetch(url, { headers: { Accept: "application/json" }, credentials: "same-origin" })
+  const body = await response.json().catch(() => ({}))
+  if (!response.ok) throw new Error(body.error ?? `Request failed (${response.status})`)
+  return body
+}

@@ -94,6 +94,11 @@ export default class extends Controller {
     }
   }
 
+  // Adds values programmatically (AI suggestions), keeping existing ones.
+  addValues(values) {
+    values.forEach((value) => this.add(value, { refocus: false }))
+  }
+
   remove({ params: { index } }) {
     this.selected = this.selected.filter((_, position) => position !== index)
     this.render()

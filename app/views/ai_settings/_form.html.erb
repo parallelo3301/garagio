@@ -1,0 +1,78 @@
+<section id="ai" class="surface-card mt-6 scroll-mt-20 p-6">
+  <div class="flex items-center gap-2">
+    <%= icon(:sparkles, size: 20, class: "text-primary") %>
+    <h2 class="text-lg font-semibold">AI recognition</h2>
+    <% if ai_config.configured? %>
+      <span class="badge badge-success badge-sm">On</span>
+    <% end %>
+  </div>
+  <p class="mt-1 text-sm text-base-content/60">
+    Take a photo when adding an item and let a vision model fill in its name, manufacturer and description.
+    Works with any OpenAI-compatible API. Photos are sent to the selected provider.
+  </p>
+
+  <%= form_with model: ai_config, url: ai_settings_path, method: :patch, scope: :ai_config, class: "mt-5 space-y-4",
+        data: { controller: "ai-settings", ai_settings_presets_value: AiConfig::PRESETS.to_json,
+                ai_settings_models_url_value: models_ai_settings_path } do |form| %>
+    <% if ai_config.errors.any? %>
+      <div role="alert" class="alert alert-error text-sm"><%= ai_config.errors.full_messages.to_sentence %></div>
+    <% end %>
+
+    <div class="grid gap-4 sm:grid-cols-2">
+      <label class="block">
+        <span class="field-label">Provider</span>
+        <%= form.select :provider, AiConfig::PRESETS.map { |key, preset| [ preset[:label], key ] }, {},
+              class: "select w-full", data: { ai_settings_target: "provider", action: "ai-settings#changeProvider" } %>
+      </label>
+      <label class="block">
+        <span class="field-label">API URL</span>
+        <%= form.url_field :base_url, class: "input w-full", required: true, data: { ai_settings_target: "baseUrl" } %>
+      </label>
+    </div>
+
+    <label class="block">
+      <span class="field-label">API token</span>
+      <%= form.password_field :api_key, value: "", class: "input w-full", autocomplete: "off", spellcheck: false,
+            placeholder: ai_config.api_key.present? ? "Saved (#{ai_config.masked_api_key}) — leave empty to keep" : "Paste your API key",
+            data: { ai_settings_target: "apiKey" } %>
+      <span class="mt-1 block text-xs text-base-content/50" data-ai-settings-target="keyHint"></span>
+    </label>
+    <% if ai_config.api_key.present? %>
+      <label class="flex items-center gap-2 text-sm">
+        <%= form.check_box :clear_api_key, class: "checkbox checkbox-sm" %> Remove saved token
+      </label>
+    <% end %>
+
+    <label class="block">
+      <span class="field-label">Model</span>
+      <div class="flex gap-2">
+        <%= form.text_field :model, class: "input min-w-0 flex-1", required: true, list: "ai-models", autocomplete: "off", spellcheck: false,
+              data: { ai_settings_target: "model" } %>
+        <button type="button" class="btn btn-ghost shrink-0" data-action="ai-settings#loadModels" data-ai-settings-target="loadButton">Load models</button>
+      </div>
+      <datalist id="ai-models" data-ai-settings-target="modelList"></datalist>
+      <span class="mt-1 block text-xs text-base-content/50" data-ai-settings-target="modelHint">A fast vision model is enough, e.g. Gemini Flash. Load models lists vision models from the provider (uses the saved token).</span>
+    </label>
+
+    <div class="grid gap-4 sm:grid-cols-2">
+      <label class="block">
+        <span class="field-label">Answer language</span>
+        <%= form.text_field :language, class: "input w-full", required: true, list: "ai-languages" %>
+        <datalist id="ai-languages">
+          <% AiConfig::LANGUAGES.each do |language| %><option value="<%= language %>"></option><% end %>
+        </datalist>
+      </label>
+      <div>
+        <span class="field-label">Web search by default</span>
+        <label class="flex min-h-12 items-center gap-3 text-sm">
+          <%= form.check_box :web_search, class: "toggle toggle-primary", data: { ai_settings_target: "webSearch" } %>
+          <span data-ai-settings-target="webSearchHint" data-supported="Pre-check “Search the web” when scanning. Adds specs and sources; slower and about 3× the cost">Pre-check “Search the web” when scanning. Adds specs and sources; slower and about 3× the cost</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="flex justify-end">
+      <%= form.button "Save AI settings", class: "btn btn-primary" %>
+    </div>
+  <% end %>
+</section>

@@ -1,0 +1,27 @@
+<section class="form-card border-primary/30 bg-primary/5" data-controller="ai-fill"
+         data-ai-fill-url-value="<%= identify_items_path %>" data-ai-fill-photos-outlet="#item_photos">
+  <div class="flex items-start gap-3">
+    <span class="mt-0.5 text-primary"><%= icon :sparkles, size: 20 %></span>
+    <div class="min-w-0">
+      <h2 class="font-semibold">Fill in with AI</h2>
+      <p class="text-sm text-base-content/60">Photograph the item, its type plate or packaging. AI suggests the name, manufacturer, description and tags.</p>
+    </div>
+  </div>
+  <div class="mt-3 grid grid-cols-1 gap-2 sm:flex" data-ai-fill-target="buttons">
+    <button type="button" class="btn btn-primary gap-2" data-action="ai-fill#choose">
+      <%= icon :camera, size: 18 %> Photo &amp; fill in
+    </button>
+    <input type="file" accept="image/*" multiple hidden data-action="change->ai-fill#snap" aria-label="Photo for AI recognition">
+    <button type="button" class="btn btn-outline gap-2" data-action="ai-fill#identify">
+      <%= icon :sparkles, size: 18 %> Use added photos
+    </button>
+  </div>
+  <% if @ai_config.web_search_supported? %>
+    <label class="mt-3 flex items-center gap-2 text-sm">
+      <input type="checkbox" class="checkbox checkbox-sm checkbox-primary" data-ai-fill-target="webSearch" <%= "checked" if @ai_config.web_search %>>
+      <span>Search the web <span class="text-base-content/50">— more details and sources, slower, ~3× the cost</span></span>
+    </label>
+  <% end %>
+  <div data-ai-fill-target="status" role="status" aria-live="polite" hidden></div>
+  <div class="mt-3 rounded-box border border-base-300 bg-base-100 p-3" data-ai-fill-target="result" hidden></div>
+</section>

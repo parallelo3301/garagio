@@ -13,6 +13,7 @@
 
   <%= form_with model: item, id: "item_form", class: "mt-5 space-y-4", data: { controller: "item-form borrowed", turbo_action: "replace" } do |form| %>
     <%= render "shared/errors", record: item %>
+    <%= render "items/ai_fill" if @ai_configured %>
 
     <section class="form-card space-y-4">
       <div role="radiogroup" aria-label="Item type" class="grid grid-cols-2 gap-1 rounded-field bg-base-200 p-1">

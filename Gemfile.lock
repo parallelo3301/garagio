@@ -328,6 +328,7 @@ DEPENDENCIES
   propshaft
   puma (>= 5.0)
   rails (~> 8.1.4)
+  rubocop
   rubocop-rails-omakase
   sqlite3 (>= 2.1)
   stimulus-rails

@@ -18,6 +18,11 @@ export default class extends Controller {
   async upload(event) {
     const files = Array.from(event.currentTarget.files)
     event.currentTarget.value = ""
+    await this.addFiles(files)
+  }
+
+  // Uploads files and resolves once all are stored (used by AI recognition too).
+  async addFiles(files) {
     if (!files.length) return
     this.errorTarget.hidden = true
     const tiles = files.map((file) => this.addTile(URL.createObjectURL(file), { uploading: true }))
@@ -69,6 +74,11 @@ export default class extends Controller {
   makeCover(event) {
     this.listTarget.prepend(event.currentTarget.closest("[data-photo]"))
     this.refresh()
+  }
+
+  // Paths of photos that finished uploading, cover first.
+  get paths() {
+    return Array.from(this.listTarget.querySelectorAll("input")).filter((input) => !input.disabled && input.value).map((input) => input.value)
   }
 
   refresh() {

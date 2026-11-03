@@ -11,6 +11,7 @@ It is designed for a phone in the workshop, while remaining comfortable on a des
 - Location and tags use pill inputs that suggest values already in use.
 - Multiple photos per item. Choose the cover photo; view photos full-screen and at full resolution. Large photos are downscaled in the browser (max 2560 px) before upload.
 - Mobile-first UI built with Turbo and Stimulus: no accidental zoom, and Back/Forward history works.
+- Optional **AI fill**: photograph an item (or its type plate/packaging) and a vision model suggests the name, manufacturer, description, tags and amount, optionally confirmed by web search. See [AI recognition](#ai-recognition).
 - Wiki pages with search, live Markdown preview (GitHub-flavoured, auto-linking), image upload/drop/paste, editing, and deletion.
 - Bidirectional item/Wiki relationships.
 - Password-protected application and JSON API access.
@@ -50,6 +51,23 @@ Configuration comes from environment variables. In development and on bare-metal
 | `GARAGIO_DATA_DIR` | Directory for `db.sqlite`, `uploads/` and the generated secret. Defaults to `storage/`; `/data` in Docker. |
 
 Do not enable `TRUST_PROXY=true` when the service is directly reachable from untrusted clients: anyone can forge forwarded IP headers unless a reverse proxy strips them.
+
+## AI recognition
+
+Configure it in **Settings → AI recognition**. Any OpenAI-compatible API works; presets fill in the URL and a default vision model:
+
+| Provider | Web search |
+| --- | --- |
+| Vercel AI Gateway | yes (Perplexity search tool) |
+| OpenRouter | yes (`web` plugin) |
+| xAI (Grok) | yes (Responses API `web_search` tool) |
+| OpenAI, Google Gemini | no |
+| Custom (e.g. Ollama) | no; the token is optional |
+
+- **Load models** lists the provider's vision models. The answer language is configurable.
+- The API token is stored encrypted in the database with a key derived from the app secret (`SECRET_KEY_BASE` or `data/secret_key_base`). If that secret changes, enter the token again.
+- Photos are sent to the selected provider. Web search is chosen per scan with the **Search the web** checkbox (off by default; Settings can pre-check it). Reading the type plate usually identifies the model; search adds specs and sources but costs about 3× more (with Grok roughly $0.016 vs $0.05 per scan).
+- A scan usually takes 15–40 s. If a reverse proxy sits in front of Garagio, allow at least 90 s of read timeout and request bodies of several MB for photo uploads.
 
 ## Development commands
 
