@@ -1,0 +1,27 @@
+<% content_for :title, "Settings" %>
+<h1 class="page-title">Settings</h1>
+<p class="page-subtitle">Manage manufacturers and workshop metadata</p>
+
+<section class="surface-card mt-8 p-6">
+  <h2 class="text-lg font-semibold">Manufacturers</h2>
+  <p class="mt-1 text-sm text-base-content/60">Used when labeling inventory items.</p>
+  <%= form_with model: @manufacturer, class: "mt-4 space-y-2" do |form| %>
+    <%= render "shared/errors", record: @manufacturer %>
+    <div class="flex flex-col gap-2 sm:flex-row">
+      <%= form.text_field :name, class: "input min-w-0 flex-1", placeholder: "Add manufacturer", required: true, aria: { label: "Manufacturer name" } %>
+      <%= form.button "Add", class: "btn btn-primary sm:shrink-0" %>
+    </div>
+  <% end %>
+  <ul class="mt-4 divide-y divide-base-300 overflow-hidden rounded-xl border border-base-300">
+    <% @manufacturers.each do |manufacturer| %>
+      <li id="<%= dom_id(manufacturer) %>" class="flex items-center justify-between gap-4 bg-base-100 px-4 py-3">
+        <span class="font-medium"><%= manufacturer.name %></span>
+        <%= button_to "Delete", manufacturer_path(manufacturer), method: :delete, class: "btn btn-ghost btn-sm text-error",
+              form: { data: { turbo_confirm: "Delete #{manufacturer.name}? Items keep existing without a manufacturer." } } %>
+      </li>
+    <% end %>
+    <% if @manufacturers.empty? %>
+      <li class="px-4 py-6 text-center text-sm text-base-content/60">No manufacturers yet.</li>
+    <% end %>
+  </ul>
+</section>

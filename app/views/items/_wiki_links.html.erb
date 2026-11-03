@@ -1,0 +1,29 @@
+<fieldset class="space-y-2">
+  <legend class="field-label">Related wiki pages</legend>
+  <%= hidden_field_tag "item[wiki_page_ids][]", "", id: nil %>
+  <% if item.wiki_pages.any? %>
+    <div class="flex flex-wrap gap-2">
+      <% item.wiki_pages.each do |page| %>
+        <%= link_to page.title, wiki_page_path(page), class: "badge badge-primary badge-lg", data: { turbo_frame: "_top" } %>
+      <% end %>
+    </div>
+  <% end %>
+  <details class="group rounded-xl border border-base-300 bg-base-100">
+    <summary class="flex min-h-11 cursor-pointer items-center justify-between px-3 text-sm font-medium">
+      Link pages
+      <span class="text-xs text-base-content/50"><%= pluralize(item.wiki_page_ids.size, "linked page") %></span>
+    </summary>
+    <div class="max-h-44 overflow-auto border-t border-base-300">
+      <% if @wiki_pages.any? %>
+        <% @wiki_pages.each do |page| %>
+          <label class="flex min-h-11 cursor-pointer items-center gap-3 border-b border-base-200 px-3 last:border-0 hover:bg-base-200/60">
+            <%= check_box_tag "item[wiki_page_ids][]", page.id, item.wiki_page_ids.include?(page.id), id: "item_wiki_page_#{page.id}", class: "checkbox checkbox-sm checkbox-primary" %>
+            <span class="text-sm"><%= page.title %></span>
+          </label>
+        <% end %>
+      <% else %>
+        <p class="p-3 text-sm text-base-content/60">Create wiki pages to link them here.</p>
+      <% end %>
+    </div>
+  </details>
+</fieldset>

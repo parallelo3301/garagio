@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="garagio">
+  <head>
+    <%= render "layouts/head" %>
+    <meta name="turbo-refresh-method" content="morph">
+    <meta name="turbo-refresh-scroll" content="preserve">
+    <%= yield :head %>
+  </head>
+
+  <body class="min-h-screen bg-slate-100 font-sans text-base-content">
+    <div class="mx-auto flex min-h-screen max-w-7xl">
+      <aside class="sticky top-0 hidden h-screen w-64 shrink-0 flex-col bg-neutral text-neutral-content lg:flex">
+        <%= link_to root_path, class: "flex items-center gap-3 border-b border-white/10 px-6 py-6" do %>
+          <span class="flex size-11 items-center justify-center rounded-xl bg-primary text-primary-content shadow-lg shadow-primary/30">
+            <%= icon :package, size: 22 %>
+          </span>
+          <span>
+            <span class="block text-lg font-bold tracking-tight">Garagio</span>
+            <span class="block text-xs text-neutral-content/60">Workshop inventory</span>
+          </span>
+        <% end %>
+        <nav class="flex flex-1 flex-col gap-1 px-3 py-4" aria-label="Main">
+          <% nav_items.each do |item| %>
+            <%= link_to item[:url], class: class_names(
+                  "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                  "bg-white/10 text-white shadow-inner": item[:active],
+                  "text-neutral-content/70 hover:bg-white/5 hover:text-neutral-content": !item[:active]
+                ), aria: { current: (item[:active] ? "page" : nil) } do %>
+              <%= icon item[:section], size: 18 %>
+              <%= item[:label] %>
+            <% end %>
+          <% end %>
+        </nav>
+        <div class="border-t border-white/10 p-4">
+          <%= button_to logout_path, method: :delete, class: "btn btn-ghost btn-block justify-start gap-2 text-neutral-content/80 hover:bg-white/5 hover:text-neutral-content", form: { data: { turbo: false } } do %>
+            <%= icon :logout, size: 18 %>
+            Log out
+          <% end %>
+        </div>
+      </aside>
+
+      <div class="flex min-w-0 flex-1 flex-col">
+        <header class="sticky top-0 z-10 flex items-center justify-between border-b border-base-300/80 bg-base-100/90 px-4 py-3 backdrop-blur lg:hidden">
+          <%= link_to root_path, class: "flex items-center gap-2.5" do %>
+            <span class="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-content">
+              <%= icon :package, size: 18 %>
+            </span>
+            <span class="font-semibold">Garagio</span>
+          <% end %>
+          <%= button_to logout_path, method: :delete, class: "btn btn-ghost btn-sm gap-1.5", form: { data: { turbo: false } } do %>
+            <%= icon :logout, size: 18 %>
+            Log out
+          <% end %>
+        </header>
+
+        <main class="flex-1 px-4 pb-28 pt-5 sm:px-6 lg:px-8 lg:pb-8 lg:pt-8">
+          <%= yield %>
+        </main>
+      </div>
+    </div>
+
+    <nav class="dock dock-md z-20 border-t border-base-300 bg-base-100/95 backdrop-blur lg:hidden" aria-label="Main">
+      <% nav_items.each do |item| %>
+        <%= link_to item[:url], class: class_names("text-primary dock-active": item[:active], "text-base-content/60": !item[:active]) do %>
+          <%= icon item[:section], size: 20 %>
+          <span class="dock-label text-xs font-medium"><%= item[:label] %></span>
+        <% end %>
+      <% end %>
+    </nav>
+
+    <%= render "shared/flash" %>
+    <%= turbo_frame_tag "modal", src: content_for(:modal_src).presence %>
+  </body>
+</html>

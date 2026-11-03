@@ -1,0 +1,32 @@
+<% content_for :title, "Sign in" %>
+<main class="relative grid min-h-screen place-items-center overflow-hidden bg-neutral px-4 py-8">
+  <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(5,150,105,0.25),transparent_55%)]"></div>
+  <%= form_with url: login_path, class: "surface-card relative z-10 w-full max-w-md p-8", data: { turbo: false } do |form| %>
+    <div class="mb-6 flex items-center gap-3">
+      <span class="flex size-12 items-center justify-center rounded-2xl bg-primary text-primary-content shadow-lg shadow-primary/25">
+        <%= icon :package, size: 24 %>
+      </span>
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight">Garagio</h1>
+        <p class="text-sm text-base-content/60">Workshop inventory manager</p>
+      </div>
+    </div>
+    <p class="text-sm leading-relaxed text-base-content/70">
+      Enter your access password to manage tools, supplies, and workshop notes.
+    </p>
+    <% if flash[:alert] %>
+      <div role="alert" class="alert alert-error mt-5 text-sm"><span><%= flash[:alert] %></span></div>
+    <% end %>
+    <% if Rails.configuration.x.access_password.blank? %>
+      <div role="alert" class="alert alert-warning mt-5 text-sm">
+        <span>ACCESS_PASSWORD is not configured on the server, so nobody can sign in yet.</span>
+      </div>
+    <% end %>
+    <label class="mt-6 block">
+      <span class="field-label">Password</span>
+      <%= form.password_field :password, class: "input w-full", autofocus: true, required: true,
+            placeholder: "Your workshop password", autocomplete: "current-password" %>
+    </label>
+    <%= form.button "Unlock Garagio", class: "btn btn-primary btn-block mt-6" %>
+  <% end %>
+</main>

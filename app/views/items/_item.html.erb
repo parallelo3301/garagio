@@ -1,0 +1,23 @@
+<%= link_to edit_item_path(item, return_to: request.fullpath), id: dom_id(item),
+      class: "surface-card group flex flex-col overflow-hidden text-left transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg",
+      data: { turbo_frame: "modal" } do %>
+  <figure class="flex h-40 items-center justify-center bg-base-200 p-4">
+    <% if item.cover_photo %>
+      <%= image_tag item.cover_photo, alt: "", loading: "lazy", class: "max-h-full max-w-full object-contain transition group-hover:scale-[1.02]" %>
+    <% else %>
+      <span class="flex flex-col items-center gap-2 text-base-content/30">
+        <%= icon :package, size: 32 %>
+        <span class="text-xs font-medium">No photo</span>
+      </span>
+    <% end %>
+  </figure>
+  <div class="space-y-2 p-4">
+    <div class="flex items-start justify-between gap-2">
+      <h2 class="font-semibold leading-snug"><%= item.name %></h2>
+      <span class="<%= status_badge_class(item.status) %>"><%= item.quantity %> · <%= item.status_label %></span>
+    </div>
+    <p class="line-clamp-2 text-sm text-base-content/60">
+      <%= [ item.manufacturer&.name, item.location.presence || "No location", item.tag_list.presence ].compact.join(" · ") %>
+    </p>
+  </div>
+<% end %>

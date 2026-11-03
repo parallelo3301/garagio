@@ -1,0 +1,7 @@
+<% content_for :title, "Wiki" %>
+<%= render layout: "wiki_pages/workspace", locals: { current: nil } do %>
+  <div class="empty-state border-dashed">
+    <%= icon :wiki, size: 40, class: "text-base-content/25" %>
+    <p class="font-medium text-base-content/70">Choose a page or create a new one</p>
+  </div>
+<% end %>

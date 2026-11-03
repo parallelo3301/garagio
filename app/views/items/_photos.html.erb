@@ -1,0 +1,12 @@
+<div data-controller="photos">
+  <span class="field-label">Photos</span>
+  <%= hidden_field_tag "item[photos][]", "", id: nil %>
+  <input type="file" accept="image/*" multiple class="file-input w-full" aria-label="Add photos"
+         data-photos-target="input" data-action="photos#upload">
+  <p class="mt-1 text-sm text-base-content/50" data-photos-target="status" hidden>
+    <span class="loading loading-spinner loading-xs"></span> Uploading...
+  </p>
+  <p class="mt-1 text-sm text-error" data-photos-target="error" hidden></p>
+  <div class="mt-2 grid grid-cols-3 gap-2 empty:hidden" data-photos-target="list"><% item.photos.each do |photo| %><%= render "items/photo", photo: %><% end %></div>
+  <template data-photos-target="template"><%= render "items/photo", photo: "" %></template>
+</div>

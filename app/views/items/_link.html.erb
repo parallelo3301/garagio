@@ -1,0 +1,6 @@
+<li class="flex min-h-12 items-center gap-2 px-3">
+  <a class="link link-primary min-w-0 flex-1 truncate text-sm" href="<%= link["url"] %>" target="_blank" rel="noreferrer"><%= link["label"] %></a>
+  <input type="hidden" name="item[links][][label]" value="<%= link["label"] %>" data-field="label">
+  <input type="hidden" name="item[links][][url]" value="<%= link["url"] %>" data-field="url">
+  <button type="button" class="btn btn-ghost btn-xs text-error" data-action="links#remove">Remove</button>
+</li>

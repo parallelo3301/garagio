@@ -1,0 +1,8 @@
+<div id="flash" class="toast toast-top toast-center z-50">
+  <% flash.each do |type, message| %>
+    <div role="alert" data-controller="flash" data-action="click->flash#dismiss"
+         class="<%= class_names("alert shadow-lg cursor-pointer", "alert-success": type == "notice", "alert-error": type == "alert") %>">
+      <span><%= message %></span>
+    </div>
+  <% end %>
+</div>

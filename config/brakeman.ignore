@@ -1,0 +1,28 @@
+{
+  "ignored_warnings": [
+    {
+      "warning_type": "File Access",
+      "warning_code": 16,
+      "fingerprint": "e577b03f3157321b63cd46d149f20ed6b3e8fcb9156423ef3c03a776455aace2",
+      "check_name": "SendFile",
+      "message": "Model attribute used in file name",
+      "file": "app/controllers/uploads_controller.rb",
+      "line": 13,
+      "link": "https://brakemanscanner.org/docs/warning_types/file_access/",
+      "code": "send_file(Upload.file_for(params[:filename]), :type => Upload.content_type_for(Upload.file_for(params[:filename]).basename.to_s), :disposition => :inline)",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "UploadsController",
+        "method": "show"
+      },
+      "user_input": "Upload.file_for(params[:filename])",
+      "confidence": "Medium",
+      "cwe_id": [
+        22
+      ],
+      "note": "Upload.file_for only accepts <uuid>.<ext> names (FILENAME_PATTERN) inside the uploads directory, so no traversal is possible."
+    }
+  ],
+  "brakeman_version": "x"
+}

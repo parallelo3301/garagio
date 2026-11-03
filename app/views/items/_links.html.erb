@@ -1,0 +1,13 @@
+<fieldset class="space-y-2" data-controller="links">
+  <legend class="field-label">Links</legend>
+  <div class="flex flex-col gap-2 sm:flex-row">
+    <input class="input min-w-0 flex-1" placeholder="Label" aria-label="Link label"
+           data-links-target="label" data-action="keydown->links#addOnEnter">
+    <input class="input min-w-0 flex-1" type="url" placeholder="https://..." aria-label="Link URL"
+           data-links-target="url" data-action="keydown->links#addOnEnter">
+    <button type="button" class="btn btn-neutral sm:shrink-0" data-action="links#add">Add</button>
+  </div>
+  <ul class="divide-y divide-base-300 overflow-hidden rounded-xl border border-base-300 bg-base-100"
+      data-links-target="list" <%= "hidden" if item.links.empty? %>><% item.links.each do |link| %><%= render "items/link", link: %><% end %></ul>
+  <template data-links-target="template"><%= render "items/link", link: { "label" => "", "url" => "" } %></template>
+</fieldset>

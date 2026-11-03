@@ -1,0 +1,78 @@
+<%= turbo_frame_tag "modal" do %>
+  <div class="modal modal-open modal-bottom lg:modal-end" data-controller="modal" data-action="keydown@window->modal#closeOnEscape">
+    <section class="modal-box flex max-h-[92vh] flex-col p-0 lg:h-screen lg:max-h-screen lg:w-[42rem] lg:max-w-[42rem]"
+             role="dialog" aria-modal="true" aria-labelledby="item-sheet-title">
+      <div class="flex items-center justify-between border-b border-base-300 bg-base-100 px-5 py-4">
+        <h2 id="item-sheet-title" class="text-xl font-bold"><%= item.persisted? ? "Edit item" : "New item" %></h2>
+        <button type="button" class="btn btn-ghost btn-sm btn-circle" data-action="modal#close" aria-label="Close">
+          <%= icon :close, size: 18 %>
+        </button>
+      </div>
+
+      <%= form_with model: item, id: "item_form", class: "min-h-0 flex-1 space-y-4 overflow-y-auto p-5",
+            data: { controller: "borrowed" } do |form| %>
+        <%= hidden_field_tag :return_to, params[:return_to] %>
+        <%= render "shared/errors", record: item %>
+
+        <label class="block">
+          <span class="field-label">Name</span>
+          <%= form.text_field :name, class: "input w-full", required: true, autofocus: true, placeholder: "Tool or supply name" %>
+        </label>
+        <label class="block">
+          <span class="field-label">Description</span>
+          <%= form.text_area :description, rows: 3, class: "textarea w-full", placeholder: "Optional notes about this item" %>
+        </label>
+        <div class="grid grid-cols-2 gap-4">
+          <label class="block">
+            <span class="field-label">Quantity</span>
+            <%= form.number_field :quantity, min: 0, step: 1, class: "input w-full" %>
+          </label>
+          <label class="block">
+            <span class="field-label">Location</span>
+            <%= form.text_field :location, class: "input w-full", placeholder: "Shelf, drawer..." %>
+          </label>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <label class="block">
+            <span class="field-label">Status</span>
+            <%= form.select :status, Item::STATUSES.map { |status| [ status.tr("_", " "), status ] }, {},
+                  class: "select w-full", data: { borrowed_target: "status", action: "borrowed#toggle" } %>
+          </label>
+          <label class="block">
+            <span class="field-label">Manufacturer</span>
+            <%= form.collection_select :manufacturer_id, @manufacturers, :id, :name, { include_blank: "None" }, class: "select w-full" %>
+          </label>
+        </div>
+        <div class="grid grid-cols-2 gap-4" data-borrowed-target="fields">
+          <label class="block">
+            <span class="field-label">Borrowed to</span>
+            <%= form.text_field :borrowed_to, class: "input w-full" %>
+          </label>
+          <label class="block">
+            <span class="field-label">Borrowed date</span>
+            <%= form.date_field :borrowed_at, class: "input w-full" %>
+          </label>
+        </div>
+        <label class="block">
+          <span class="field-label">Tags (comma separated)</span>
+          <%= form.text_field :tag_list, value: item.tag_list, class: "input w-full", placeholder: "power tools, outdoor, ..." %>
+        </label>
+
+        <%= render "items/photos", form:, item: %>
+        <%= render "items/links", item: %>
+        <%= render "items/wiki_links", item: %>
+      <% end %>
+
+      <div class="flex items-center justify-between gap-3 border-t border-base-300 bg-base-100 px-5 py-4">
+        <% if item.persisted? %>
+          <%= button_to "Delete", item_path(item, return_to: params[:return_to]), method: :delete,
+                class: "btn btn-ghost text-error", form: { data: { turbo_confirm: "Delete #{item.name}?" } } %>
+        <% else %>
+          <span></span>
+        <% end %>
+        <button type="submit" form="item_form" class="btn btn-primary">Save item</button>
+      </div>
+    </section>
+    <div class="modal-backdrop bg-neutral/50 backdrop-blur-sm" data-action="click->modal#close"></div>
+  </div>
+<% end %>

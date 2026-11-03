@@ -1,0 +1,14 @@
+#!/usr/bin/env sh
+# Development server: Rails on http://localhost:4000 (override with DEV_PORT) plus the Tailwind watcher.
+
+if ! gem list foreman -i --silent; then
+  echo "Installing foreman..."
+  gem install foreman
+fi
+
+export DEV_PORT="${DEV_PORT:-4000}"
+export RUBY_DEBUG_OPEN="true"
+export RUBY_DEBUG_LAZY="true"
+
+bin/rails db:prepare || exit 1
+exec foreman start -f Procfile.dev "$@"

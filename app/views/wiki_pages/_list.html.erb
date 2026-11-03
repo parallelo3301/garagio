@@ -1,0 +1,13 @@
+<%= turbo_frame_tag "wiki_list", target: "_top" do %>
+  <nav class="max-h-72 overflow-y-auto lg:max-h-[calc(100vh-14rem)]" aria-label="Wiki pages">
+    <% if pages.any? %>
+      <% pages.each do |page| %>
+        <%= link_to page.title, wiki_page_path(page), data: { wiki_link: true },
+              class: class_names("block w-full border-b border-base-200 px-4 py-3 text-left text-sm font-medium transition last:border-0",
+                "bg-primary/10 text-primary": current&.id == page.id, "hover:bg-base-200/70": current&.id != page.id) %>
+      <% end %>
+    <% else %>
+      <p class="p-4 text-sm text-base-content/60"><%= @any_pages ? "No matching pages." : "No pages yet." %></p>
+    <% end %>
+  </nav>
+<% end %>

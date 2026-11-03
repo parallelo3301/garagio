@@ -1,6 +1,33 @@
-node_modules/
-uploads/*
-data/
-workshop-inventory*
-db.sqlite
+# Bundler / Rails
+/.bundle
+/log/*
+/tmp/*
+!/log/.keep
+!/tmp/.keep
+/tmp/pids/*
+!/tmp/pids/
+!/tmp/pids/.keep
+/tmp/storage/*
+!/tmp/storage/
+!/tmp/storage/.keep
+/public/assets
+/app/assets/builds/*
+!/app/assets/builds/.keep
+/config/*.key
+/coverage
+
+# Runtime data (SQLite database, uploads, generated secret)
+/storage/*
+!/storage/.keep
+/data/
+
+# Local configuration and editors
 .env
+.env.*
+!.env.example
+.idea/
+.DS_Store
+
+# Legacy Deno build artifacts
+node_modules/
+workshop-inventory*

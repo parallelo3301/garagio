@@ -1,0 +1,19 @@
+# SQLite database lives in the data directory (GARAGIO_DATA_DIR, default storage/) next to uploads/.
+default: &default
+  adapter: sqlite3
+  max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  timeout: 5000
+
+development:
+  <<: *default
+  database: <%= File.join(ENV.fetch("GARAGIO_DATA_DIR", "storage"), "db.sqlite") %>
+
+# Warning: The database defined as "test" will be erased and
+# re-generated from your development database when you run "rake".
+test:
+  <<: *default
+  database: storage/test.sqlite3
+
+production:
+  <<: *default
+  database: <%= File.join(ENV.fetch("GARAGIO_DATA_DIR", "storage"), "db.sqlite") %>
