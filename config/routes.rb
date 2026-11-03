@@ -6,7 +6,7 @@ Rails.application.routes.draw do
   delete "logout" => "sessions#destroy"
 
   root "items#index"
-  resources :items, only: %i[index new create edit update destroy]
+  resources :items, only: %i[index show new create edit update destroy]
   resources :wiki_pages, path: "wiki", only: %i[index show new create edit update destroy] do
     post :preview, on: :collection
   end

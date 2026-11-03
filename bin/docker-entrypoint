@@ -4,7 +4,7 @@
 if [ "$(id -u)" = "0" ]; then
   mkdir -p "${GARAGIO_DATA_DIR:-/data}"
   chown -R rails:rails "${GARAGIO_DATA_DIR:-/data}"
-  exec setpriv --reuid=rails --regid=rails --init-groups "$0" "$@"
+  HOME=/home/rails exec setpriv --reuid=rails --regid=rails --init-groups "$0" "$@"
 fi
 
 # If running the rails server then create or migrate the database (also adopts databases from the Deno version)

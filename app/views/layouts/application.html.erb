@@ -53,13 +53,13 @@
           <% end %>
         </header>
 
-        <main class="flex-1 px-4 pb-28 pt-5 sm:px-6 lg:px-8 lg:pb-8 lg:pt-8">
+        <main class="flex-1 px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-5 sm:px-6 lg:px-8 lg:pb-8 lg:pt-8">
           <%= yield %>
         </main>
       </div>
     </div>
 
-    <nav class="dock dock-md z-20 border-t border-base-300 bg-base-100/95 backdrop-blur lg:hidden" aria-label="Main">
+    <nav class="dock dock-md z-20 <%= "hidden" if content_for?(:hide_dock) %> border-t border-base-300 bg-base-100/95 backdrop-blur lg:hidden" aria-label="Main">
       <% nav_items.each do |item| %>
         <%= link_to item[:url], class: class_names("text-primary dock-active": item[:active], "text-base-content/60": !item[:active]) do %>
           <%= icon item[:section], size: 20 %>
@@ -69,6 +69,5 @@
     </nav>
 
     <%= render "shared/flash" %>
-    <%= turbo_frame_tag "modal", src: content_for(:modal_src).presence %>
   </body>
 </html>

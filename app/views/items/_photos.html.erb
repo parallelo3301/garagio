@@ -1,12 +1,20 @@
-<div data-controller="photos">
-  <span class="field-label">Photos</span>
+<section class="form-card" data-controller="photos">
+  <div class="flex items-center justify-between gap-3">
+    <h2 class="section-label">Photos</h2>
+    <span class="text-xs text-base-content/50">First photo is the cover</span>
+  </div>
   <%= hidden_field_tag "item[photos][]", "", id: nil %>
-  <input type="file" accept="image/*" multiple class="file-input w-full" aria-label="Add photos"
-         data-photos-target="input" data-action="photos#upload">
-  <p class="mt-1 text-sm text-base-content/50" data-photos-target="status" hidden>
-    <span class="loading loading-spinner loading-xs"></span> Uploading...
-  </p>
-  <p class="mt-1 text-sm text-error" data-photos-target="error" hidden></p>
-  <div class="mt-2 grid grid-cols-3 gap-2 empty:hidden" data-photos-target="list"><% item.photos.each do |photo| %><%= render "items/photo", photo: %><% end %></div>
+  <div class="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4" data-photos-target="list"><% item.photos.each do |photo| %><%= render "items/photo", photo: %><% end %></div>
+  <p class="mt-2 text-sm text-error" data-photos-target="error" role="alert" hidden></p>
+  <div class="mt-3 grid grid-cols-2 gap-2 sm:flex">
+    <button type="button" class="btn btn-outline gap-2" data-action="photos#choose">
+      <%= icon :image, size: 18 %> Add photos
+    </button>
+    <input type="file" accept="image/*" multiple hidden data-action="change->photos#upload" aria-label="Add photos">
+    <button type="button" class="btn btn-outline gap-2 pointer-fine:hidden" data-action="photos#choose">
+      <%= icon :camera, size: 18 %> Take photo
+    </button>
+    <input type="file" accept="image/*" capture="environment" hidden data-action="change->photos#upload" aria-label="Take photo">
+  </div>
   <template data-photos-target="template"><%= render "items/photo", photo: "" %></template>
-</div>
+</section>

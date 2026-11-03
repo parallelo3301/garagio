@@ -11,7 +11,7 @@ class WikiAndSettingsTest < ActionDispatch::IntegrationTest
 
     get wiki_page_path(page)
     assert_select "strong", "Sharp"
-    assert_select "a[href=?]", root_path(item: item.id)
+    assert_select "a[href=?]", item_path(item)
 
     patch wiki_page_path(page), params: { wiki_page: { title: "Drill bits", content: "x" } }
     assert_equal "Drill bits", page.reload.title

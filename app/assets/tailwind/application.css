@@ -49,6 +49,16 @@
 @layer base {
   html {
     @apply scroll-smooth antialiased;
+    /* No double-tap zoom on phones; taps also register without the 300 ms delay. */
+    touch-action: manipulation;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* iOS zooms into focused fields with text smaller than 16px. */
+  @media (pointer: coarse), (max-width: 639px) {
+    input, select, textarea {
+      font-size: max(16px, 1em) !important;
+    }
   }
 
   [hidden] {
@@ -74,4 +84,43 @@
 
 @utility field-label {
   @apply mb-1.5 block text-sm font-medium text-base-content/80;
+}
+
+@utility section-label {
+  @apply text-xs font-semibold uppercase tracking-wider text-base-content/50;
+}
+
+@utility form-card {
+  @apply surface-card p-4 sm:p-5;
+}
+
+@layer components {
+  .lightbox {
+    @apply fixed inset-0 m-0 h-dvh max-h-none w-dvw max-w-none overflow-hidden border-0 bg-black p-0 text-white outline-none;
+    overscroll-behavior: contain;
+  }
+
+  .lightbox::backdrop {
+    @apply bg-black;
+  }
+
+  .lightbox-slide {
+    @apply flex h-full w-full shrink-0 snap-center items-center justify-center overflow-hidden;
+    cursor: zoom-in;
+  }
+
+  .lightbox-slide img {
+    @apply max-h-full max-w-full object-contain select-none;
+  }
+
+  /* 1:1 view: the image keeps its full resolution and the slide scrolls to pan. */
+  .lightbox-slide.zoomed {
+    @apply block overflow-auto;
+    cursor: zoom-out;
+    overscroll-behavior: contain;
+  }
+
+  .lightbox-slide.zoomed img {
+    @apply max-h-none max-w-none;
+  }
 }

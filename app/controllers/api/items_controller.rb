@@ -15,7 +15,7 @@ class Api::ItemsController < Api::BaseController
 
   def update
     item = Item.find(params[:id])
-    item.update(item_attributes)
+    item.update(item_attributes(item))
     render_record item
   end
 
@@ -26,12 +26,13 @@ class Api::ItemsController < Api::BaseController
 
   private
 
-  # Accepts the camelCase payload of the original API.
-  def item_attributes
-    input = params.permit(:name, :description, :quantity, :location, :manufacturerId, :status, :borrowedTo,
+  # Accepts the camelCase payload of the original API; kind and amount are kept when omitted.
+  def item_attributes(item = nil)
+    input = params.permit(:name, :kind, :description, :quantity, :amount, :location, :manufacturerId, :status, :borrowedTo,
       :borrowedAt, tags: [], photos: [], wikiPageIds: [], links: [ [ :label, :url ] ])
     {
-      name: input[:name], description: input[:description], quantity: input.fetch(:quantity, 1),
+      name: input[:name], kind: input[:kind].presence || item&.kind || "tool", description: input[:description],
+      quantity: input.fetch(:quantity, 1), amount: input.key?(:amount) ? input[:amount] : item&.amount,
       location: input[:location], manufacturer_id: input[:manufacturerId], status: input[:status].presence || "in_stock",
       borrowed_to: input[:borrowedTo], borrowed_at: input[:borrowedAt], tag_list: Array(input[:tags]),
       photos: Array(input[:photos]), links: Array(input[:links]).map(&:to_h), wiki_page_ids: Array(input[:wikiPageIds])

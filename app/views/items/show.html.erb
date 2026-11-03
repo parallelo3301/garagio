@@ -1,0 +1,102 @@
+<% content_for :title, @item.name %>
+
+<div class="mx-auto max-w-5xl">
+  <div class="flex items-center justify-between gap-3">
+    <%= link_to root_path(kind: @item.kind), class: "btn btn-ghost btn-sm -ml-2 gap-1.5 text-base-content/70", data: { controller: "history-back", action: "history-back#go" } do %>
+      <%= icon :arrow_left, size: 18 %>
+      <%= @item.tool? ? "Tools" : "Materials" %>
+    <% end %>
+    <div class="flex items-center gap-2">
+      <%= link_to new_item_path(copy: @item.id), class: "btn btn-ghost btn-sm gap-1.5", title: "Create a copy of this item" do %>
+        <%= icon :copy, size: 16 %>
+        <span class="max-sm:sr-only">Duplicate</span>
+      <% end %>
+      <%= link_to edit_item_path(@item), class: "btn btn-primary btn-sm gap-1.5", data: { turbo_action: "replace" } do %>
+        <%= icon :pencil, size: 16 %>
+        Edit
+      <% end %>
+    </div>
+  </div>
+
+  <div class="mt-4 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start">
+    <%= render "items/gallery", item: @item %>
+
+    <div class="space-y-5">
+      <header>
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="badge badge-sm badge-ghost gap-1 font-medium">
+            <%= icon(@item.tool? ? :wrench : :boxes, size: 12) %>
+            <%= @item.tool? ? "Tool" : "Material" %>
+          </span>
+          <span class="<%= status_badge_class(@item.status) %>"><%= @item.status_label %></span>
+        </div>
+        <h1 class="mt-2 text-2xl font-bold leading-tight tracking-tight sm:text-3xl"><%= @item.name %></h1>
+      </header>
+
+      <dl class="surface-card divide-y divide-base-200 text-sm">
+        <% if @item.material? %>
+          <%= render "items/detail", icon_name: :boxes, label: "Amount" do %>
+            <span class="text-base font-semibold"><%= @item.amount_label || "—" %></span>
+          <% end %>
+        <% end %>
+        <% if @item.borrowed? %>
+          <%= render "items/detail", icon_name: :user, label: "Borrowed" do %>
+            <%= @item.borrowed_to.presence || "Someone" %><%= " · since #{l(@item.borrowed_at, format: :long)}" if @item.borrowed_at %>
+          <% end %>
+        <% end %>
+        <%= render "items/detail", icon_name: :map_pin, label: "Location" do %>
+          <%= @item.location.presence || tag.span("Not set", class: "text-base-content/40") %>
+        <% end %>
+        <%= render "items/detail", icon_name: :factory, label: "Manufacturer" do %>
+          <%= @item.manufacturer&.name || tag.span("Not set", class: "text-base-content/40") %>
+        <% end %>
+        <%= render "items/detail", icon_name: :tag, label: "Tags" do %>
+          <% if @item.tags.any? %>
+            <span class="flex flex-wrap gap-1.5">
+              <% @item.tags.each do |tag| %>
+                <%= link_to tag.name, root_path(kind: @item.kind, q: tag.name), class: "badge badge-soft badge-primary" %>
+              <% end %>
+            </span>
+          <% else %>
+            <span class="text-base-content/40">None</span>
+          <% end %>
+        <% end %>
+      </dl>
+
+      <% if @item.description.present? %>
+        <section class="surface-card p-4 sm:p-5">
+          <h2 class="section-label">Description</h2>
+          <div class="markdown prose prose-sm mt-2 max-w-none text-base-content/85"><%= markdown(@item.description) %></div>
+        </section>
+      <% end %>
+
+      <% if @item.links.any? %>
+        <section class="surface-card p-2">
+          <h2 class="section-label px-2 pt-2">Links</h2>
+          <ul class="mt-1">
+            <% @item.links.each do |link| %>
+              <li>
+                <a href="<%= link["url"] %>" target="_blank" rel="noreferrer" class="flex min-h-11 items-center gap-3 rounded-lg px-2 text-sm hover:bg-base-200">
+                  <%= icon :link, size: 16, class: "shrink-0 text-base-content/40" %>
+                  <span class="min-w-0 flex-1 truncate font-medium text-primary"><%= link["label"] %></span>
+                  <%= icon :external, size: 14, class: "shrink-0 text-base-content/30" %>
+                </a>
+              </li>
+            <% end %>
+          </ul>
+        </section>
+      <% end %>
+
+      <% if @item.wiki_pages.any? %>
+        <section>
+          <h2 class="section-label">Related wiki pages</h2>
+          <div class="mt-2 flex flex-wrap gap-2">
+            <% @item.wiki_pages.each do |page| %>
+              <%= link_to page.title, wiki_page_path(page), class: "badge badge-lg badge-outline badge-primary" %>
+            <% end %>
+          </div>
+        </section>
+      <% end %>
+    </div>
+  </div>
+</div>

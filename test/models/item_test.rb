@@ -42,12 +42,25 @@ class ItemTest < ActiveSupport::TestCase
     assert_equal 2, Item.search("").size
   end
 
+  test "kinds, amount labels and known locations" do
+    assert_not Item.new(name: "X", kind: "gadget").valid?
+    assert_nil Item.new(name: "Drill", quantity: 3).amount_label
+    assert_equal "3", Item.new(name: "Nails", kind: "material", quantity: 3).amount_label
+    assert_equal "100+", Item.new(name: "Nails", kind: "material", quantity: 3, amount: "100+").amount_label
+
+    Item.create!(name: "A", location: "garage")
+    Item.create!(name: "B", location: "Attic")
+    Item.create!(name: "C", location: "garage")
+    Item.create!(name: "D")
+    assert_equal [ "Attic", "garage" ], Item.locations
+  end
+
   test "serializes to the original camelCase API shape" do
     page = WikiPage.create!(title: "Notes")
     item = Item.create!(name: "Drill", status: "borrowed", borrowed_to: "Ann", borrowed_at: Date.new(2024, 5, 1),
       tag_list: "a", wiki_pages: [ page ])
     json = item.as_json
-    assert_equal %i[id name description quantity location manufacturerId manufacturerName status borrowedTo borrowedAt tags photos links wikiPageIds].sort, json.keys.sort
+    assert_equal %i[id name kind description quantity amount location manufacturerId manufacturerName status borrowedTo borrowedAt tags photos links wikiPageIds].sort, json.keys.sort
     assert_equal "2024-05-01", json[:borrowedAt]
     assert_equal [ page.id ], json[:wikiPageIds]
   end

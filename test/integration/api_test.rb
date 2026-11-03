@@ -34,6 +34,19 @@ class ApiTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "items keep kind and amount when an update omits them" do
+    post api_items_path, params: { name: "Nails", kind: "material", amount: "100+" }, as: :json
+    assert_response :created
+    id = response.parsed_body["id"]
+    assert_equal [ "material", "100+" ], response.parsed_body.values_at("kind", "amount")
+
+    patch api_item_path(id), params: { name: "Nails 40 mm" }, as: :json
+    assert_equal [ "Nails 40 mm", "material", "100+" ], response.parsed_body.values_at("name", "kind", "amount")
+
+    post api_items_path, params: { name: "Saw" }, as: :json
+    assert_equal "tool", response.parsed_body["kind"]
+  end
+
   test "manufacturers and wiki endpoints" do
     post api_manufacturers_path, params: { name: "Makita", website: "https://makita.example" }, as: :json
     assert_response :created

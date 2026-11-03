@@ -1,0 +1,12 @@
+<div class="relative" data-controller="chips" data-chips-multiple-value="<%= multiple %>" data-chips-noun-value="<%= noun %>"
+     data-chips-suggestions-value="<%= suggestions.to_json %>">
+  <%= hidden_field_tag name, value, id: nil, data: { chips_target: "value" } %>
+  <div class="input h-auto min-h-[var(--size)] w-full cursor-text flex-wrap gap-1.5 py-1.5" data-action="click->chips#focus">
+    <span class="contents" data-chips-target="list"></span>
+    <input type="text" class="min-w-28 flex-1" autocomplete="off" enterkeyhint="<%= multiple ? "enter" : "done" %>"
+           aria-label="<%= noun.capitalize %>" data-placeholder="<%= placeholder %>" placeholder="<%= placeholder %>"
+           data-chips-target="input" data-action="focus->chips#filter input->chips#filter keydown->chips#key blur->chips#blur">
+  </div>
+  <ul class="menu absolute inset-x-0 w-full top-full z-30 mt-1 max-h-64 flex-nowrap overflow-y-auto rounded-box border border-base-300 bg-base-100 p-1 shadow-lg"
+      data-chips-target="menu" role="listbox" hidden></ul>
+</div>

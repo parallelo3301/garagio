@@ -1,40 +1,86 @@
 import { Controller } from "@hotwired/stimulus"
-import { uploadImages } from "lib/request"
+import { uploadImage } from "lib/request"
 
-// Uploads photos immediately and keeps hidden item[photos][] inputs in sync with the thumbnails.
+// Uploads each chosen photo right away (with an instant local preview) and keeps hidden
+// item[photos][] inputs in sync with the tiles. The first photo is the item's cover.
 export default class extends Controller {
-  static targets = ["input", "list", "template", "status", "error"]
+  static targets = ["input", "list", "template", "error"]
 
-  async upload() {
-    const files = this.inputTarget.files
+  connect() {
+    this.pending = 0
+    this.refresh()
+  }
+
+  choose(event) {
+    event.currentTarget.nextElementSibling?.click()
+  }
+
+  async upload(event) {
+    const files = Array.from(event.currentTarget.files)
+    event.currentTarget.value = ""
     if (!files.length) return
-    this.busy(true)
+    this.errorTarget.hidden = true
+    const tiles = files.map((file) => this.addTile(URL.createObjectURL(file), { uploading: true }))
+    this.setPending(files.length)
+    // Upload two at a time: fast on Wi-Fi, gentle on mobile data.
+    const queue = files.map((file, index) => [file, tiles[index]])
+    const worker = async () => {
+      for (let entry = queue.shift(); entry; entry = queue.shift()) await this.uploadOne(...entry)
+    }
+    await Promise.all([worker(), worker()])
+  }
+
+  async uploadOne(file, tile) {
     try {
-      const paths = await uploadImages(files)
-      paths.forEach((path) => this.add(path))
+      const path = await uploadImage(file)
+      URL.revokeObjectURL(tile.querySelector("img").src)
+      tile.querySelector("img").src = path
+      const input = tile.querySelector("input")
+      input.value = path
+      input.disabled = false
+      tile.removeAttribute("data-uploading")
     } catch (error) {
-      this.errorTarget.textContent = error.message
+      tile.remove()
+      this.errorTarget.textContent = `${file.name}: ${error.message}`
       this.errorTarget.hidden = false
     } finally {
-      this.inputTarget.value = ""
-      this.busy(false)
+      this.setPending(-1)
+      this.refresh()
     }
   }
 
-  add(path) {
-    const node = this.templateTarget.content.firstElementChild.cloneNode(true)
-    node.querySelector("img").src = path
-    node.querySelector("input").value = path
-    this.listTarget.append(node)
+  addTile(src, { uploading = false } = {}) {
+    const tile = this.templateTarget.content.firstElementChild.cloneNode(true)
+    tile.querySelector("img").src = src
+    const input = tile.querySelector("input")
+    input.value = uploading ? "" : src
+    input.disabled = uploading
+    tile.toggleAttribute("data-uploading", uploading)
+    this.listTarget.append(tile)
+    this.refresh()
+    return tile
   }
 
   remove(event) {
     event.currentTarget.closest("[data-photo]").remove()
+    this.refresh()
   }
 
-  busy(state) {
-    this.statusTarget.hidden = !state
-    this.errorTarget.hidden = true
-    this.element.closest("form")?.querySelectorAll("[type=submit]").forEach((button) => (button.disabled = state))
+  makeCover(event) {
+    this.listTarget.prepend(event.currentTarget.closest("[data-photo]"))
+    this.refresh()
+  }
+
+  refresh() {
+    const tiles = Array.from(this.listTarget.children)
+    tiles.forEach((tile, index) => tile.toggleAttribute("data-cover", index === 0))
+    this.listTarget.hidden = tiles.length === 0
+  }
+
+  setPending(change) {
+    this.pending += change
+    this.element.closest("form")?.querySelectorAll("[type=submit]").forEach((button) => (button.disabled = this.pending > 0))
+    document.querySelectorAll(`[form="${this.element.closest("form")?.id}"][type=submit]`)
+      .forEach((button) => (button.disabled = this.pending > 0))
   }
 }

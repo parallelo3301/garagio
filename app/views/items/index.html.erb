@@ -1,43 +1,56 @@
 <% content_for :title, "Inventory" %>
-<% if params[:item] == "new" %>
-  <% content_for :modal_src, new_item_path %>
-<% elsif @open_item %>
-  <% content_for :modal_src, edit_item_path(@open_item) %>
-<% end %>
 
-<div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+<div class="flex items-end justify-between gap-4">
   <div>
     <h1 class="page-title">Inventory</h1>
-    <p class="page-subtitle"><%= pluralize(@all_count, "tool and supply", plural: "tools and supplies") %></p>
+    <p class="page-subtitle hidden sm:block">Tools you own and materials you keep in stock</p>
   </div>
-  <%= link_to new_item_path(return_to: request.fullpath), class: "btn btn-primary gap-2 shadow-md shadow-primary/20", data: { turbo_frame: "modal" } do %>
+  <%= link_to new_item_path(kind: @kind), class: "btn btn-primary gap-2 shadow-md shadow-primary/20" do %>
     <%= icon :plus, size: 18 %>
-    Add item
+    <span>Add <%= @kind %></span>
   <% end %>
 </div>
 
-<%= form_with url: root_path, method: :get, class: "mt-6", role: "search",
-      data: { controller: "search", turbo_frame: "items", turbo_action: "advance" } do |form| %>
+<div role="tablist" class="tabs tabs-box mt-5 grid w-full grid-cols-2 bg-base-300/60 p-1 sm:inline-grid sm:w-auto">
+  <% Item::KINDS.each do |kind| %>
+    <%= link_to root_path(kind:, q: @query.presence), role: "tab", class: class_names("tab gap-2 font-medium", "tab-active": kind == @kind),
+          aria: { selected: kind == @kind }, data: { turbo_action: "replace" } do %>
+      <%= icon(kind == "tool" ? :wrench : :boxes, size: 16) %>
+      <%= kind == "tool" ? "Tools" : "Materials" %>
+      <span class="badge badge-sm <%= kind == @kind ? "badge-primary" : "badge-ghost" %>"><%= @counts[kind] %></span>
+    <% end %>
+  <% end %>
+</div>
+
+<%= form_with url: root_path, method: :get, class: "mt-4", role: "search",
+      data: { controller: "search", turbo_frame: "items", turbo_action: "replace" } do |form| %>
+  <%= hidden_field_tag :kind, @kind, id: nil %>
   <label class="input w-full bg-base-100 shadow-sm">
     <%= icon :search, size: 18, class: "shrink-0 text-base-content/40" %>
-    <%= form.search_field :q, value: @query, class: "grow", autocomplete: "off",
+    <%= form.search_field :q, value: @query, class: "grow", autocomplete: "off", enterkeyhint: "search",
           placeholder: "Search name, manufacturer, tags, location...", aria: { label: "Search inventory" },
           data: { action: "input->search#submit" } %>
   </label>
 <% end %>
 
 <%= turbo_frame_tag "items", target: "_top" do %>
+  <% other_kind = (Item::KINDS - [ @kind ]).first %>
   <% if @query.present? %>
-    <p class="mt-4 text-sm text-base-content/60"><%= pluralize(@items.size, "match") %> for “<%= @query %>”</p>
+    <p class="mt-4 text-sm text-base-content/60">
+      <%= pluralize(@items.size, "match") %> for “<%= @query %>”
+      <% if @counts[other_kind].positive? %>
+        · <%= link_to "#{@counts[other_kind]} in #{other_kind == "tool" ? "tools" : "materials"}", root_path(kind: other_kind, q: @query), class: "link link-primary" %>
+      <% end %>
+    </p>
   <% end %>
   <% if @items.empty? %>
     <div class="empty-state mt-6">
-      <%= icon :package, size: 40, class: "text-base-content/25" %>
-      <p class="font-medium text-base-content/70">No matching items yet</p>
-      <p class="text-sm">Add your first tool or adjust your search.</p>
+      <%= icon(@kind == "tool" ? :wrench : :boxes, size: 40, class: "text-base-content/25") %>
+      <p class="font-medium text-base-content/70"><%= @query.present? ? "Nothing matches" : "No #{@kind == "tool" ? "tools" : "materials"} yet" %></p>
+      <p class="text-sm"><%= @kind == "tool" ? "Add each tool as its own item." : "Track screws, nails, glue and other supplies with an approximate amount." %></p>
     </div>
   <% else %>
-    <div class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    <div class="mt-4 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-soft max-sm:divide-y max-sm:divide-base-200 sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:rounded-none sm:border-0 sm:bg-transparent sm:shadow-none xl:grid-cols-3">
       <%= render partial: "items/item", collection: @items %>
     </div>
   <% end %>

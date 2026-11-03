@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_03_160000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_03_180000) do
   create_table "auth_sessions", primary_key: "session_id", id: :string, force: :cascade do |t|
     t.string "ip_address", null: false
     t.datetime "expires_at", null: false
@@ -43,6 +43,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_03_160000) do
     t.text "links_json", default: "[]", null: false
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.string "kind", default: "tool", null: false
+    t.string "amount", default: "", null: false
+    t.index ["kind"], name: "index_items_on_kind"
     t.index ["location"], name: "index_items_on_location"
     t.index ["manufacturer_id"], name: "index_items_on_manufacturer_id"
     t.index ["name"], name: "index_items_on_name"

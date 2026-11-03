@@ -6,9 +6,11 @@ It is designed for a phone in the workshop, while remaining comfortable on a des
 
 ## Features
 
-- Inventory items with quantity, location, manufacturer, tags, status, borrowing details, photos, and external links.
-- Instant search and an item editor that opens as a sheet, powered by Turbo Frames and Stimulus. Items have deep links like `/?item=42`.
-- Photo uploads stored locally, with thumbnails in the inventory list.
+- Inventory split into **Tools** (one row per physical tool) and **Materials** (consumables with a rough amount like `100+` or `running low`).
+- Each item has a read-only page at `/items/:id` showing the formatted description, details and a photo gallery, plus a separate full-page editor. Items can be duplicated.
+- Location and tags use pill inputs that suggest values already in use.
+- Multiple photos per item. Choose the cover photo; view photos full-screen and at full resolution. Large photos are downscaled in the browser (max 2560 px) before upload.
+- Mobile-first UI built with Turbo and Stimulus: no accidental zoom, and Back/Forward history works.
 - Wiki pages with search, live Markdown preview (GitHub-flavoured, auto-linking), image upload/drop/paste, editing, and deletion.
 - Bidirectional item/Wiki relationships.
 - Password-protected application and JSON API access.
@@ -84,7 +86,7 @@ Open http://localhost:8000. The `data/` directory holds `db.sqlite`, `uploads/` 
 
 The container runs as uid 1000; the entrypoint fixes ownership of `/data` on start. A `/up` health check is built in.
 
-For reverse-proxy deployments, point the proxy to port 8000, have it set `X-Forwarded-For`, and set `TRUST_PROXY=true`. If it terminates TLS, also set `FORCE_SSL=true`.
+For reverse-proxy deployments, point the proxy to port 8000, have it set `X-Forwarded-For`, and set `TRUST_PROXY=true`. If it terminates TLS, also set `FORCE_SSL=true`. Allow request bodies of at least a few MB (nginx: `client_max_body_size 25m;`) so photo and wiki uploads aren't rejected with 413.
 
 ## Upgrading from the Deno version
 

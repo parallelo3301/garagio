@@ -1,5 +1,7 @@
 class Item < ApplicationRecord
   STATUSES = %w[in_stock borrowed damaged maintenance retired].freeze
+  KINDS = %w[tool material].freeze
+  AMOUNT_PRESETS = [ "1–10", "10–50", "50–100", "100–500", "500+", "running low" ].freeze
 
   belongs_to :manufacturer, optional: true
   has_and_belongs_to_many :tags, -> { order(Arel.sql("name COLLATE NOCASE")) }, join_table: :item_tags
@@ -11,17 +13,20 @@ class Item < ApplicationRecord
   alias_attribute :links, :links_json
 
   normalizes :name, with: ->(name) { name.strip }
-  normalizes :location, :description, with: ->(value) { value.to_s.strip }, apply_to_nil: true
+  normalizes :location, :description, :amount, with: ->(value) { value.to_s.strip }, apply_to_nil: true
   normalizes :borrowed_to, with: ->(value) { value.strip.presence }
 
   validates :name, presence: true
   validates :quantity, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :status, inclusion: { in: STATUSES }
+  validates :kind, inclusion: { in: KINDS }
   validate :photos_are_uploads, :links_are_web_urls
 
   before_validation :clean_collections
 
   scope :ordered, -> { order(Arel.sql("items.name COLLATE NOCASE")) }
+  scope :tools, -> { where(kind: "tool") }
+  scope :materials, -> { where(kind: "material") }
   scope :with_details, -> { includes(:manufacturer, :tags, :wiki_pages) }
 
   def self.search(query)
@@ -32,7 +37,7 @@ class Item < ApplicationRecord
   end
 
   def search_text
-    [ name, description, location, manufacturer&.name, status, borrowed_to, *tag_names,
+    [ name, description, location, amount, manufacturer&.name, status, borrowed_to, *tag_names,
       *links.flat_map { |link| [ link["label"], link["url"] ] } ].compact.join(" ").downcase
   end
 
@@ -49,6 +54,25 @@ class Item < ApplicationRecord
     self.tags = names.uniq(&:downcase).map { |name| Tag.find_or_create_by!(name:) }
   end
 
+  def self.locations
+    where.not(location: "").distinct.order(Arel.sql("location COLLATE NOCASE")).pluck(:location)
+  end
+
+  def tool?
+    kind == "tool"
+  end
+
+  def material?
+    kind == "material"
+  end
+
+  # Tools are tracked one per item; materials carry an approximate, free-text amount.
+  def amount_label
+    return if tool?
+
+    amount.presence || (quantity.positive? ? quantity.to_s : nil)
+  end
+
   def borrowed?
     status == "borrowed"
   end
@@ -63,7 +87,7 @@ class Item < ApplicationRecord
 
   def as_json(*)
     {
-      id:, name:, description:, quantity:, location:,
+      id:, name:, kind:, description:, quantity:, amount:, location:,
       manufacturerId: manufacturer_id, manufacturerName: manufacturer&.name,
       status:, borrowedTo: borrowed_to, borrowedAt: borrowed_at&.iso8601,
       tags: tag_names, photos:, links:, wikiPageIds: wiki_page_ids

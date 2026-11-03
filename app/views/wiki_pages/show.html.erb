@@ -17,7 +17,7 @@
         <h3 class="text-xs font-semibold uppercase tracking-wider text-base-content/50">Linked inventory</h3>
         <div class="mt-3 grid gap-3 sm:grid-cols-2">
           <% @linked_items.each do |item| %>
-            <%= link_to root_path(item: item.id), class: "flex items-center gap-3 rounded-xl border border-base-300 bg-base-200/50 p-3 text-left transition hover:border-primary/40 hover:bg-primary/5" do %>
+            <%= link_to item_path(item), class: "flex items-center gap-3 rounded-xl border border-base-300 bg-base-200/50 p-3 text-left transition hover:border-primary/40 hover:bg-primary/5" do %>
               <span class="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-base-300 text-base-content/30">
                 <% if item.cover_photo %>
                   <%= image_tag item.cover_photo, alt: "", class: "size-full object-cover" %>

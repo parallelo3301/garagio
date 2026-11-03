@@ -1,35 +1,39 @@
 class ItemsController < ApplicationController
-  before_action :set_item, only: %i[edit update destroy]
+  before_action :set_item, only: %i[show edit update destroy]
   before_action :load_form_options, only: %i[new create edit update]
 
   def index
+    return redirect_to(legacy_item_path) if params[:item].present?
+
+    @kind = Item::KINDS.include?(params[:kind]) ? params[:kind] : "tool"
     @query = params[:q].to_s
-    @all_count = Item.count
-    @items = Item.with_details.ordered.search(@query)
-    @open_item = Item.find_by(id: params[:item]) if params[:item].present?
+    matches = Item.with_details.ordered.search(@query)
+    @counts = Item::KINDS.index_with { |kind| matches.count { |item| item.kind == kind } }
+    @items = matches.select { |item| item.kind == @kind }
+  end
+
+  def show
   end
 
   def new
-    @item = Item.new(quantity: 1)
-    render_modal_or_redirect(root_path(item: "new"))
+    @item = copy_source&.then { |source| duplicate(source) } || Item.new(kind: kind_param || "tool", quantity: 1)
   end
 
   def create
     @item = Item.new(item_params)
     if @item.save
-      turbo_redirect_to safe_return_path(root_path), notice: "#{@item.name} added."
+      redirect_to item_path(@item), notice: "#{@item.name} added."
     else
       render :new, status: :unprocessable_entity
     end
   end
 
   def edit
-    render_modal_or_redirect(root_path(item: @item.id))
   end
 
   def update
     if @item.update(item_params)
-      turbo_redirect_to safe_return_path(root_path), notice: "#{@item.name} saved."
+      redirect_to item_path(@item), notice: "#{@item.name} saved."
     else
       render :edit, status: :unprocessable_entity
     end
@@ -37,31 +41,50 @@ class ItemsController < ApplicationController
 
   def destroy
     @item.destroy!
-    turbo_redirect_to safe_return_path(root_path), notice: "#{@item.name} deleted."
+    redirect_to root_path(kind: @item.kind), notice: "#{@item.name} deleted.", status: :see_other
   end
 
   private
 
   def set_item
-    @item = Item.find(params[:id])
+    @item = Item.with_details.find(params[:id])
   end
 
   def load_form_options
     @manufacturers = Manufacturer.ordered
     @wiki_pages = WikiPage.ordered.select(:id, :title)
+    @tag_suggestions = Tag.order(Arel.sql("name COLLATE NOCASE")).pluck(:name)
+    @location_suggestions = Item.locations
   end
 
-  # Item forms are shown in a modal turbo frame; direct visits open the modal on the inventory page.
-  def render_modal_or_redirect(fallback)
-    redirect_to fallback unless turbo_frame_request?
+  # Old links opened the item sheet with /?item=<id|new>.
+  def legacy_item_path
+    params[:item] == "new" ? new_item_path : item_path(params[:item])
+  end
+
+  def kind_param
+    params[:kind] if Item::KINDS.include?(params[:kind])
+  end
+
+  def copy_source
+    Item.with_details.find_by(id: params[:copy]) if params[:copy].present?
+  end
+
+  def duplicate(source)
+    source.dup.tap do |copy|
+      copy.assign_attributes(status: "in_stock", borrowed_to: nil, borrowed_at: nil)
+      copy.tags = source.tags
+      copy.wiki_pages = source.wiki_pages
+    end
   end
 
   def item_params
-    permitted = params.expect(item: [ :name, :description, :quantity, :location, :manufacturer_id, :status,
+    permitted = params.expect(item: [ :name, :kind, :description, :quantity, :amount, :location, :manufacturer_id, :status,
       :borrowed_to, :borrowed_at, :tag_list, photos: [], wiki_page_ids: [], links: [ [ :label, :url ] ] ])
     permitted[:photos] ||= []
     permitted[:links] = Array(permitted[:links]).map(&:to_h)
     permitted[:wiki_page_ids] = Array(permitted[:wiki_page_ids]).compact_blank
+    permitted[:quantity] = 1 if permitted[:kind] == "tool"
     unless permitted[:status] == "borrowed"
       permitted[:borrowed_to] = nil
       permitted[:borrowed_at] = nil
