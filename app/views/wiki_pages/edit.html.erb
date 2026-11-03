@@ -1,0 +1,4 @@
+<% content_for :title, "Edit #{@page.title}" %>
+<%= render layout: "wiki_pages/workspace", locals: { current: @page } do %>
+  <%= render "form", page: @page %>
+<% end %>

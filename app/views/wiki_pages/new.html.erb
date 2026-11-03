@@ -1,0 +1,4 @@
+<% content_for :title, "New page" %>
+<%= render layout: "wiki_pages/workspace", locals: { current: nil } do %>
+  <%= render "form", page: @page %>
+<% end %>

@@ -1,0 +1,7 @@
+<div class="relative aspect-square overflow-hidden rounded-xl bg-base-200" data-photo>
+  <img src="<%= photo %>" alt="" class="size-full object-cover">
+  <input type="hidden" name="item[photos][]" value="<%= photo %>">
+  <button type="button" class="btn btn-circle btn-xs absolute right-1 top-1 bg-base-100/90" data-action="photos#remove" aria-label="Remove photo">
+    <%= icon :close, size: 14 %>
+  </button>
+</div>

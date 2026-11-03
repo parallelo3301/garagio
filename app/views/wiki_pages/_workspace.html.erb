@@ -1,0 +1,29 @@
+<div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+  <div>
+    <h1 class="page-title">Wiki</h1>
+    <p class="page-subtitle">Notes, manuals, and workshop knowledge</p>
+  </div>
+  <%= link_to new_wiki_page_path, class: "btn btn-primary gap-2" do %>
+    <%= icon :plus, size: 18 %>
+    New page
+  <% end %>
+</div>
+
+<div class="mt-6 grid gap-5 lg:grid-cols-[16rem_1fr]">
+  <aside class="surface-card h-fit overflow-hidden">
+    <%= form_with url: wiki_pages_path, method: :get, class: "border-b border-base-300 p-3", role: "search",
+          data: { controller: "search", turbo_frame: "wiki_list" } do |form| %>
+      <%= hidden_field_tag :current, current&.id %>
+      <label class="input input-sm w-full bg-base-100">
+        <%= icon :search, size: 16, class: "text-base-content/40" %>
+        <%= form.search_field :q, value: @query, placeholder: "Search pages", class: "grow", autocomplete: "off",
+              aria: { label: "Search wiki pages" }, data: { action: "input->search#submit" } %>
+      </label>
+    <% end %>
+    <%= render "wiki_pages/list", pages: @pages, current: %>
+  </aside>
+
+  <div class="min-w-0">
+    <%= yield %>
+  </div>
+</div>

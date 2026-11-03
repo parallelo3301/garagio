@@ -1,168 +1,130 @@
 # Garagio
 
-Garagio is a lightweight, self-hosted inventory manager for workshop and garage tools. It runs as a Deno Fresh application and can be compiled into a single executable.
+Garagio is a lightweight, self-hosted inventory manager for workshop and garage tools, built with Ruby on Rails 8.1, Hotwire (Turbo + Stimulus), Tailwind CSS 4 with daisyUI 5, and SQLite.
 
 It is designed for a phone in the workshop, while remaining comfortable on a desktop or tablet.
 
 ## Features
 
 - Inventory items with quantity, location, manufacturer, tags, status, borrowing details, photos, and external links.
-- Photo uploads stored locally in `uploads/` with image thumbnails in the inventory list.
-- Wiki pages with search, Markdown preview, image upload/drop, plain URL auto-linking, editing, and deletion.
-- Bidirectional item/Wiki relationships: open Wiki pages from an item and linked inventory from a Wiki page.
-- Password-protected application and API access.
-- SQLite-backed sessions that survive web-server restarts, with a 30-day expiry and login IP address storage.
+- Instant search and an item editor that opens as a sheet, powered by Turbo Frames and Stimulus. Items have deep links like `/?item=42`.
+- Photo uploads stored locally, with thumbnails in the inventory list.
+- Wiki pages with search, live Markdown preview (GitHub-flavoured, auto-linking), image upload/drop/paste, editing, and deletion.
+- Bidirectional item/Wiki relationships.
+- Password-protected application and JSON API access.
+- SQLite-backed sessions that survive restarts, with a 30-day expiry and login IP address storage.
 - Automatic IP ban for five failed password attempts; bans expire after one month.
-- Automatic, transactional SQLite migrations at startup.
-- Portable data: back up `db.sqlite` and `uploads/` together.
+- Portable data: one directory holds the database, uploads and generated secret.
 
 ## Requirements
 
-For development:
+- [mise](https://mise.jdx.dev/) to install the Ruby version pinned in `mise.toml` (Ruby 4.0.9), or any other way to get that Ruby.
+- SQLite 3.
 
-- [Deno](https://deno.com/runtime) 2.x
-- Node.js and [pnpm](https://pnpm.io/) for Tailwind CSS builds
-
-For deployment from a compiled binary, Deno and Node.js are not required on the server.
-
-## Quick Start
+## Quick start (development)
 
 ```bash
-pnpm install
-cp .env.example .env
+mise install
+cp .env.example .env      # set ACCESS_PASSWORD
+bin/setup --skip-server   # installs gems and prepares the database
+bin/dev
 ```
 
-Set a real value for `ACCESS_PASSWORD` in `.env`, then start the development server:
+Open http://localhost:4000 and sign in with the password from `.env`. `bin/dev` runs Rails and the Tailwind watcher. It always listens on port 4000 (override with `DEV_PORT`), independent of `PORT` in `.env`.
 
-```bash
-pnpm dev
-```
-
-Open `http://localhost:8000` and sign in with the password from `.env`.
-
-The first launch creates `db.sqlite`, creates `uploads/`, and runs all pending database migrations automatically.
+In development the data lives in `storage/` (`storage/db.sqlite`, `storage/uploads/`).
 
 ## Configuration
 
-Garagio reads its configuration from `.env`. The file is ignored by Git; use `.env.example` as the template.
-
-```env
-ACCESS_PASSWORD=change-this-to-a-long-password
-PORT=8000
-TRUST_PROXY=false
-```
+Configuration comes from environment variables. In development and on bare-metal hosts they can also come from `.env`, which is ignored by Git; use `.env.example` as the template.
 
 | Variable | Description |
 | --- | --- |
 | `ACCESS_PASSWORD` | Required password for application access. Change it before deployment. |
-| `PORT` | HTTP listen port. Defaults to `8000` if not set. |
-| `TRUST_PROXY` | Set to `true` only when Garagio is behind a trusted reverse proxy. It then uses the first `X-Forwarded-For` value, falling back to `X-Real-IP`, for login IP tracking and bans. |
+| `PORT` | HTTP port for production/Docker. Defaults to `8000`. |
+| `TRUST_PROXY` | Set to `true` only behind a trusted reverse proxy. Login IP tracking and bans then use the first `X-Forwarded-For` value, falling back to `X-Real-IP`. |
+| `FORCE_SSL` | Set to `true` when served over HTTPS (redirects to HTTPS, secure cookies, HSTS). |
+| `SECRET_KEY_BASE` | Optional. If unset, a secret is generated once and stored as `secret_key_base` in the data directory. |
+| `GARAGIO_DATA_DIR` | Directory for `db.sqlite`, `uploads/` and the generated secret. Defaults to `storage/`; `/data` in Docker. |
 
-Do not enable `TRUST_PROXY=true` when the service is directly reachable from untrusted clients: forwarded IP headers can be forged without a reverse proxy that removes them.
+Do not enable `TRUST_PROXY=true` when the service is directly reachable from untrusted clients: anyone can forge forwarded IP headers unless a reverse proxy strips them.
 
-## Development Commands
-
-```bash
-pnpm dev                 # Start Fresh and automatically rebuild CSS on changes
-pnpm check               # Type-check the app
-pnpm build               # Build a native executable for the current platform
-pnpm build:linux         # Cross-compile an x86_64 GNU/Linux executable
-pnpm migrate:create add_feature_name
-```
-
-Edit Tailwind utility classes in the Preact components or add global CSS to `styles/tailwind.css`. `static/styles.css` is the generated, minified stylesheet served by the app and should remain committed so the source checkout works before a CSS build. `pnpm dev` rebuilds it automatically; `pnpm build` also regenerates it before compiling the executable.
-
-`pnpm build:linux` produces `workshop-inventory-linux`, targeting `x86_64-unknown-linux-gnu`. It is suitable for an x86_64 Ubuntu 22.04 deployment host.
-
-## Docker Deployment
-
-Docker avoids host glibc compatibility problems with the SQLite native bridge. It runs with the system SQLite library from a controlled Debian image.
-
-Create `.env` from `.env.example`, set a secure `ACCESS_PASSWORD`, then build and start the service:
+## Development commands
 
 ```bash
-docker compose up --build -d
+bin/dev                    # Rails on :4000 + Tailwind watcher
+bin/rails test             # test suite
+bin/rubocop                # lint
+bin/brakeman               # security scan
+bin/rails tailwindcss:build
+bin/rails generate migration AddSomething
 ```
 
-Open `http://localhost:8000`. The `data/` directory holds both `db.sqlite` and `uploads/`; back it up as one unit. To upgrade, pull the new source and run:
+Styles live in `app/assets/tailwind/application.css` (Tailwind 4 + vendored daisyUI in the same folder). The built CSS in `app/assets/builds/` is generated and not committed. Interactivity is in Stimulus controllers under `app/javascript/controllers/`.
+
+## Docker deployment
+
+GitHub Actions (`.github/workflows/docker.yml`) runs lint, security scan and tests. On every push to `master` (and on `v*` tags) it publishes a multi-arch image (`linux/amd64`, `linux/arm64`) to `ghcr.io/parallelo3301/garagio`.
 
 ```bash
-docker compose up --build -d
+cp .env.example .env       # set ACCESS_PASSWORD
+docker compose up -d       # uses ghcr.io/parallelo3301/garagio:latest
 ```
 
-Stop the service with `docker compose down`. This preserves `data/`; do not add `-v` because it is unnecessary and can remove Docker-managed volumes in other configurations.
-
-## Deploying to Ubuntu
-
-Build the Linux executable on your development machine:
+Or without compose:
 
 ```bash
-pnpm build:linux
+docker run -d -p 8000:8000 -e ACCESS_PASSWORD=change-me -v ./data:/data ghcr.io/parallelo3301/garagio:latest
 ```
 
-Copy these to a dedicated directory on the Ubuntu host:
+Open http://localhost:8000. The `data/` directory holds `db.sqlite`, `uploads/` and `secret_key_base`; back it up as one unit.
+
+- **Upgrade:** `docker compose pull && docker compose up -d`. Migrations run automatically on start.
+- **Build locally:** uncomment `build: .` in `compose.yml`, or run `docker build -t garagio .`.
+
+The container runs as uid 1000; the entrypoint fixes ownership of `/data` on start. A `/up` health check is built in.
+
+For reverse-proxy deployments, point the proxy to port 8000, have it set `X-Forwarded-For`, and set `TRUST_PROXY=true`. If it terminates TLS, also set `FORCE_SSL=true`.
+
+## Upgrading from the Deno version
+
+The Rails version uses the same data layout (`db.sqlite` + `uploads/`) and the same `compose.yml` volume (`./data:/data`). On first start, `db:prepare` detects a database created by the Deno version and migrates it in place. Items, tags, manufacturers, wiki pages, links, sessions and login bans are kept, and existing sessions stay valid. Back up `data/` before upgrading.
+
+The JSON API keeps the original paths and payloads (`/api/auth/login`, `/api/items`, `/api/manufacturers`, `/api/wiki`, `/api/uploads`).
+
+The previous Deno implementation is kept in `origin/` for reference.
+
+## Data and backups
+
+All mutable application data lives in the data directory (`storage/` in development, `/data` in Docker):
 
 ```text
-workshop-inventory-linux
-.env
-```
-
-Make it executable and run it from that directory:
-
-```bash
-chmod +x workshop-inventory-linux
-./workshop-inventory-linux
-```
-
-Garagio creates `db.sqlite` and `uploads/` alongside the executable's launch directory. Keep the executable, `.env`, database, and uploads in a directory writable by the deployment user.
-
-For reverse-proxy deployment, point the proxy to `http://127.0.0.1:8000`, configure the proxy to set `X-Forwarded-For`, and set `TRUST_PROXY=true` in `.env`.
-
-## Data and Backups
-
-All mutable application data lives in two places:
-
-```text
-db.sqlite
+db.sqlite (+ -wal/-shm while running)
 uploads/
+secret_key_base
 ```
 
-To back up Garagio, stop the service or ensure no writes are in progress, then copy both paths together. Restoring those two paths restores inventory, Wiki content, uploaded images, sessions, and login-attempt records.
+To back up, stop the service (or make sure no writes are in progress) and copy the directory. Restoring it restores inventory, Wiki content, images, sessions, and login-attempt records.
 
-## Security Notes
+## Security notes
 
-- Password verification happens on the server. The browser receives an HttpOnly session cookie after a successful login.
-- Sessions are stored in SQLite with the IP address used during login and a 30-day expiration.
+- Password verification happens on the server. The browser receives an HttpOnly, SameSite=Strict session cookie after a successful login.
+- Sessions are stored in SQLite with the login IP address and a 30-day expiration.
 - Five failed login attempts from one tracked IP create a one-month ban.
 - This is a small self-hosted access gate, not a multi-user identity provider. Put the service behind HTTPS when it is reachable outside a trusted local network.
 
-## Migrations
-
-SQL migrations live in `db/migrations/` and are applied once, in numeric order, on application startup. Applied versions are recorded in the `migrations` table.
-
-Create a new migration with:
-
-```bash
-pnpm migrate:create meaningful_change_name
-```
-
-Keep migrations small and test them against a copy of a real database before deployment.
-
-## Project Layout
+## Project layout
 
 ```text
-config/          Environment and authentication helpers
-db/              SQLite connection, migration runner, and SQL migrations
-islands/         Interactive Preact UI
-routes/          Fresh pages and API routes
-static/          Compiled CSS and static assets
-uploads/         Runtime photo storage (created automatically)
+app/controllers/      Pages (items, wiki, settings, uploads, sessions) and api/ JSON endpoints
+app/models/           Item, Manufacturer, Tag, WikiPage, AuthSession, LoginAttempt, Upload
+app/views/            ERB views (Turbo Frames for the item sheet, search and wiki list)
+app/javascript/       Stimulus controllers and small request helpers
+app/assets/tailwind/  Tailwind + daisyUI theme
+db/migrate/           Schema (also adopts databases from the Deno version)
+origin/               Previous Deno Fresh implementation (reference only)
 ```
 
 # Demo
 
 https://github.com/user-attachments/assets/9d398e52-aa28-4017-bf23-60bc3b5d39e8
-
-
-
-

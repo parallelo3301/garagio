@@ -1,31 +1,67 @@
-FROM node:24-bookworm-slim AS css
+# syntax=docker/dockerfile:1
+# check=error=true
 
-WORKDIR /build
-COPY package.json pnpm-lock.yaml ./
-RUN corepack enable && pnpm install --frozen-lockfile
+# Production image. Data (SQLite database, uploads, generated secret) lives in the /data volume.
+#   docker build -t garagio .
+#   docker run -d -p 8000:8000 -e ACCESS_PASSWORD=change-me -v ./data:/data garagio
+
+# Make sure RUBY_VERSION matches the Ruby version in .ruby-version
+ARG RUBY_VERSION=4.0.9
+FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
+
+WORKDIR /rails
+
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y curl libjemalloc2 sqlite3 && \
+    ln -s /usr/lib/$(uname -m)-linux-gnu/libjemalloc.so.2 /usr/local/lib/libjemalloc.so && \
+    rm -rf /var/lib/apt/lists /var/cache/apt/archives
+
+ENV RAILS_ENV="production" \
+    BUNDLE_DEPLOYMENT="1" \
+    BUNDLE_PATH="/usr/local/bundle" \
+    BUNDLE_WITHOUT="development:test" \
+    LD_PRELOAD="/usr/local/lib/libjemalloc.so"
+
+# Throw-away build stage to reduce size of final image
+FROM base AS build
+
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y build-essential git libyaml-dev pkg-config && \
+    rm -rf /var/lib/apt/lists /var/cache/apt/archives
+
+COPY vendor/* ./vendor/
+COPY Gemfile Gemfile.lock ./
+
+RUN bundle install && \
+    rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git && \
+    # -j 1 disable parallel compilation to avoid a QEMU bug: https://github.com/rails/bootsnap/issues/495
+    bundle exec bootsnap precompile -j 1 --gemfile
+
 COPY . .
-RUN pnpm run css
 
-FROM denoland/deno:2.9.3 AS compile
+RUN bundle exec bootsnap precompile -j 1 app/ lib/
 
-WORKDIR /build
-COPY --from=css /build .
-RUN deno run -A dev.ts build \
-  && deno compile --allow-read --allow-write --allow-net --allow-ffi --allow-env --allow-run \
-  --include deno.json --include db/migrations --include static --include _fresh \
-  --output /out/garagio main.ts
+# Precompile assets (Tailwind + daisyUI build included) without a real secret
+RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
 
-FROM debian:trixie-slim
 
-RUN apt-get update && apt-get install --yes --no-install-recommends libsqlite3-0 \
-  && ln -s "$(ldconfig -p | awk '/libsqlite3\.so\.0/{print $NF; exit}')" /usr/local/lib/libsqlite3.so \
-  && rm -rf /var/lib/apt/lists/*
+# Final stage for app image
+FROM base
 
-WORKDIR /data
-COPY --from=compile /out/garagio /usr/local/bin/garagio
+RUN groupadd --system --gid 1000 rails && \
+    useradd rails --uid 1000 --gid 1000 --create-home --shell /bin/bash && \
+    mkdir -p /data && chown rails:rails /data
 
-ENV DENO_SQLITE_PATH=/usr/local/lib/libsqlite3.so
-ENV PORT=8000
+COPY --chown=rails:rails --from=build "${BUNDLE_PATH}" "${BUNDLE_PATH}"
+COPY --chown=rails:rails --from=build /rails /rails
+
+ENV GARAGIO_DATA_DIR="/data" \
+    PORT="8000"
+VOLUME /data
+
+# The entrypoint fixes /data ownership (older images ran as root), drops to uid 1000 and prepares the database.
+ENTRYPOINT ["/rails/bin/docker-entrypoint"]
+
 EXPOSE 8000
-
-CMD ["garagio"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s CMD curl -fsS "http://127.0.0.1:${PORT}/up" || exit 1
+CMD ["./bin/rails", "server"]

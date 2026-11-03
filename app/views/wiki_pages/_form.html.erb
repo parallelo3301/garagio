@@ -1,0 +1,29 @@
+<%= form_with model: page, class: "surface-card p-5",
+      data: { controller: "wiki-editor", wiki_editor_preview_url_value: preview_wiki_pages_path } do |form| %>
+  <%= render "shared/errors", record: page %>
+  <%= form.text_field :title, required: true, autofocus: page.new_record?, placeholder: "Page title", aria: { label: "Page title" },
+        class: "w-full border-0 border-b border-base-300 bg-transparent px-0 py-2 text-2xl font-bold outline-none focus:border-primary" %>
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <%= form.text_area :content, aria: { label: "Content" },
+          class: "textarea min-h-80 w-full font-mono text-sm",
+          placeholder: "Write Markdown here. Drop or paste images into this editor to upload them.",
+          data: { wiki_editor_target: "content",
+                  action: "input->wiki-editor#queueRender drop->wiki-editor#drop dragover->wiki-editor#dragOver paste->wiki-editor#paste" } %>
+    <div class="min-h-80 rounded-xl border border-base-300 bg-base-200/40 p-4">
+      <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-base-content/50">Preview</p>
+      <div class="markdown prose prose-sm max-w-none text-base-content/80" data-wiki-editor-target="preview"></div>
+    </div>
+  </div>
+  <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+    <label class="btn btn-outline btn-sm gap-2">
+      <input class="hidden" type="file" accept="image/*" multiple data-wiki-editor-target="file" data-action="wiki-editor#pick">
+      <%= icon :image, size: 16 %>
+      Add images
+      <span class="loading loading-spinner loading-xs" data-wiki-editor-target="status" hidden></span>
+    </label>
+    <div class="flex gap-2">
+      <%= link_to "Cancel", page.persisted? ? wiki_page_path(page) : wiki_pages_path, class: "btn btn-ghost" %>
+      <%= form.button "Save page", class: "btn btn-primary" %>
+    </div>
+  </div>
+<% end %>
