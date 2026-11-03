@@ -62,41 +62,41 @@
           <% end %>
         <% end %>
       </dl>
-
-      <% if @item.description.present? %>
-        <section class="surface-card p-4 sm:p-5">
-          <h2 class="section-label">Description</h2>
-          <div class="markdown prose prose-sm mt-2 max-w-none text-base-content/85"><%= markdown(@item.description) %></div>
-        </section>
-      <% end %>
-
-      <% if @item.links.any? %>
-        <section class="surface-card p-2">
-          <h2 class="section-label px-2 pt-2">Links</h2>
-          <ul class="mt-1">
-            <% @item.links.each do |link| %>
-              <li>
-                <a href="<%= link["url"] %>" target="_blank" rel="noreferrer" class="flex min-h-11 items-center gap-3 rounded-lg px-2 text-sm hover:bg-base-200">
-                  <%= icon :link, size: 16, class: "shrink-0 text-base-content/40" %>
-                  <span class="min-w-0 flex-1 truncate font-medium text-primary"><%= link["label"] %></span>
-                  <%= icon :external, size: 14, class: "shrink-0 text-base-content/30" %>
-                </a>
-              </li>
-            <% end %>
-          </ul>
-        </section>
-      <% end %>
-
-      <% if @item.wiki_pages.any? %>
-        <section>
-          <h2 class="section-label">Related wiki pages</h2>
-          <div class="mt-2 flex flex-wrap gap-2">
-            <% @item.wiki_pages.each do |page| %>
-              <%= link_to page.title, wiki_page_path(page), class: "badge badge-lg badge-outline badge-primary" %>
-            <% end %>
-          </div>
-        </section>
-      <% end %>
     </div>
+
+    <% if @item.description.present? %>
+      <section class="surface-card p-4 sm:p-5 lg:col-span-2">
+        <h2 class="section-label">Description</h2>
+        <div class="markdown prose prose-sm mt-2 max-w-none text-base-content/85"><%= markdown(@item.description) %></div>
+      </section>
+    <% end %>
+
+    <% if @item.links.any? %>
+      <section class="surface-card p-2 lg:col-span-2">
+        <h2 class="section-label px-2 pt-2">Links</h2>
+        <ul class="mt-1">
+          <% @item.links.each do |link| %>
+            <li>
+              <a href="<%= link["url"] %>" target="_blank" rel="noreferrer" class="flex min-h-11 items-center gap-3 rounded-lg px-2 text-sm hover:bg-base-200">
+                <%= icon :link, size: 16, class: "shrink-0 text-base-content/40" %>
+                <span class="min-w-0 flex-1 truncate font-medium text-primary"><%= link["label"] %></span>
+                <%= icon :external, size: 14, class: "shrink-0 text-base-content/30" %>
+              </a>
+            </li>
+          <% end %>
+        </ul>
+      </section>
+    <% end %>
+
+    <% if @item.wiki_pages.any? %>
+      <section class="lg:col-span-2">
+        <h2 class="section-label">Related wiki pages</h2>
+        <div class="mt-2 flex flex-wrap gap-2">
+          <% @item.wiki_pages.each do |page| %>
+            <%= link_to page.title, wiki_page_path(page), class: "badge badge-lg badge-outline badge-primary" %>
+          <% end %>
+        </div>
+      </section>
+    <% end %>
   </div>
 </div>
